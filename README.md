@@ -1,6 +1,10 @@
 # shovel
 
-An example go CLI to demo and learn new Go tooling!
+Make a lot of DNS requests and count the results!
+
+Most certainly not in a functional state yet :)
+
+Note that this is not in Homebrew yet.
 
 ## Use
 
@@ -32,4 +36,52 @@ See [Go Developer Tooling](https://www.bbkane.com/blog/go-developer-tooling/) fo
 
 Go doc: https://pkg.go.dev/github.com/miekg/dns
 
-Usign EDNS: https://github.com/miekg/exdns/blob/master/q/q.go
+Using EDNS: https://github.com/miekg/exdns/blob/master/q/q.go
+
+### Params
+
+- FQDN
+  - 1..n
+- NS
+  - 0..n  # not sure the DNS library knows this?
+- Subnet
+  - 0..n
+- Type
+  - 1  # leaving this one makes it easier to collate responses
+- Response
+  - Err | 1..n
+
+## Mockup
+
+```bash
+shovel dig \
+    --fqdn linkedin.com \
+    --fqdn a.linkedin.com \
+    --nameserver nameserver1 \
+    --nameserver dyn \
+    --nameserver-map ns1=1.2.3.4 \
+    --nameserver-map dyn=4.3.2.1 \
+    --subnet us \
+    --subnet china \
+    --subnet-map us=6.7.8.9 \
+    --subnet-map china=9.8.7.6 \
+    --type A \
+    --timeout 10s \
+    --count 100 \
+```
+
+then with a config I could get that down to:
+
+```bash
+shovel dig \
+    --fqdn linkedin.com \
+    --fqdn a.linkedin.com \
+    --type A \
+    --subnet us \
+    --subnet china
+```
+
+Some things warg really needs to make this ergonomic:
+
+- tab completion!
+- map value type
