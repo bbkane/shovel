@@ -13,11 +13,11 @@ func buildApp() warg.App {
 	app := warg.New(
 		"shovel",
 		section.New(
-			"Example Go CLI",
+			"Dig some stuff!",
 			section.Command(
-				"hello",
-				"Say hello",
-				hello,
+				"dig",
+				"simple dig",
+				dig,
 			),
 		),
 		warg.AddColorFlag(),
