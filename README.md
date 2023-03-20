@@ -27,3 +27,9 @@ scoop install bbkane/shovel
 ## Notes
 
 See [Go Developer Tooling](https://www.bbkane.com/blog/go-developer-tooling/) for notes on development tooling.
+
+## Dev Notes
+
+Go doc: https://pkg.go.dev/github.com/miekg/dns
+
+Usign EDNS: https://github.com/miekg/exdns/blob/master/q/q.go
