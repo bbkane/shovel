@@ -17,6 +17,8 @@ func dig(ctx command.Context) error {
 	}
 	if t, ok := in.Answer[0].(*dns.A); ok {
 		fmt.Printf("%s\n", t)
+	} else {
+		return fmt.Errorf("not an a record: %s", in.Answer[0])
 	}
 
 	return nil
