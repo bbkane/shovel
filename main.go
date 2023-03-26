@@ -45,6 +45,10 @@ func buildApp() warg.App {
 					scalar.String(
 						scalar.Default("198.51.45.9"), // dns2.p09.nsone.net.
 					),
+					// scalar.New(
+					// 	IP(),
+					// 	scalar.Default(netip.MustParseAddr("198.51.45.9")),
+					// ),
 					flag.Required(),
 				),
 				command.Flag(
@@ -58,7 +62,9 @@ func buildApp() warg.App {
 				command.Flag(
 					"--subnet-ip",
 					"Optional client subnet. 101.251.8.0 for China for example",
-					scalar.String(),
+					scalar.New(
+						Addr(),
+					),
 				),
 				command.Flag(
 					"--timeout",

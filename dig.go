@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/netip"
 	"sort"
 	"strconv"
 	"time"
@@ -19,14 +20,10 @@ func runDig(cmdCtx command.Context) error {
 	nameserverIP := cmdCtx.Flags["--nameserver-ip"].(string)
 	nameserverPort := cmdCtx.Flags["--nameserver-port"].(int)
 
-	// TODO: instead of parsing froma string, add IP type to warg
+	// netip.Addr is comparable, but dig wants a net.IP
 	var subnetIP net.IP = nil
-	if sub, exists := cmdCtx.Flags["--subnet-ip"].(string); exists {
-		subnetIP = net.ParseIP(sub)
-		if subnetIP == nil {
-			return fmt.Errorf("failure to parse IP: %s", subnetIP)
-
-		}
+	if sub, exists := cmdCtx.Flags["--subnet-ip"].(netip.Addr); exists {
+		subnetIP = sub.AsSlice()
 	}
 
 	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
