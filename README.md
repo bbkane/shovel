@@ -47,9 +47,9 @@ Using EDNS: https://github.com/miekg/exdns/blob/master/q/q.go
 - Subnet
   - 0..n
 - Type
-  - 1  # leaving this one makes it easier to collate responses
+  - 1..n # Probablyy most common for A/AAAA records
 - Response
-  - Err | 1..n
+  - Err | 1..n records
 
 ## Mockup
 
@@ -84,4 +84,19 @@ shovel dig \
 Some things warg really needs to make this ergonomic:
 
 - tab completion!
-- map value type
+- map value type'
+
+Let's make a simpler mockup
+
+## Mockup v1
+
+Just dig one thing :)
+
+```bash
+shovel dig \
+    --fqdn linkedin.com \
+    --type A \
+    --ns-ip 1.2.3.4 \
+    --subnet-ip 1.2.3.4 \
+    --timeout 2s \
+```

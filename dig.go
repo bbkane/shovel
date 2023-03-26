@@ -1,20 +1,62 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"strconv"
+	"time"
 
 	"github.com/miekg/dns"
 	"go.bbkane.com/warg/command"
 )
 
-func dig(ctx command.Context) error {
+func runDig(cmdCtx command.Context) error {
+
+	fqdn := cmdCtx.Flags["--fqdn"].(string)
+	rtypeStr := cmdCtx.Flags["--rtype"].(string)
+	nameserverIP := cmdCtx.Flags["--nameserver-ip"].(string)
+	nameserverPort := cmdCtx.Flags["--nameserver-port"].(int)
+
+	// TODO: instead of parsing froma string, add IP type to warg
+	var subnetIP net.IP = nil
+	if sub, exists := cmdCtx.Flags["--subnet-ip"].(string); exists {
+		subnetIP = net.ParseIP(sub)
+		if subnetIP == nil {
+			return fmt.Errorf("failure to parse IP: %s", subnetIP)
+
+		}
+	}
+
+	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
+
+	rtype, ok := dns.StringToType[rtypeStr]
+	if !ok {
+		return fmt.Errorf("Couldn't parse rtype: %v", rtype)
+	}
+
+	nameserverIPPort := nameserverIP + ":" + strconv.Itoa(nameserverPort)
+
+	rcode, answers, err := dig(
+		fqdn,
+		rtype,
+		nameserverIPPort,
+		subnetIP,
+		timeout,
+	)
+	fmt.Printf("rcode: %s\n", dns.RcodeToString[rcode])
+	fmt.Printf("answers: %s\n", answers)
+	return err
+
+}
+
+func dig(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, timeout time.Duration) (int, []string, error) {
 	m := new(dns.Msg)
-	m.SetQuestion(dns.Fqdn("linkedin.com"), dns.TypeA)
+	m.SetQuestion(dns.Fqdn(fqdn), rtype)
 
 	// Add subnet!
 	// https://github.com/miekg/exdns/blob/d851fa434ad51cb84500b3e18b8aa7d3bead2c51/q/q.go#L209
-	{
+	if subnetIP != nil {
 		o := &dns.OPT{
 			Hdr: dns.RR_Header{
 				Name:     ".",
@@ -25,16 +67,13 @@ func dig(ctx command.Context) error {
 			},
 			Option: nil,
 		}
-		ip := "101.251.8.0" // China
+
 		e := &dns.EDNS0_SUBNET{
 			Code:          dns.EDNS0SUBNET,
-			Address:       net.ParseIP(ip),
+			Address:       subnetIP,
 			Family:        1, // IPv4
 			SourceNetmask: net.IPv4len * 8,
 			SourceScope:   0,
-		}
-		if e.Address == nil {
-			return fmt.Errorf("failure to parse IP: %s", ip)
 		}
 		if e.Address.To4() == nil {
 			e.Family = 2 // IP6
@@ -44,19 +83,26 @@ func dig(ctx command.Context) error {
 		m.Extra = append(m.Extra, o)
 	}
 
-	in, err := dns.Exchange(m, "198.51.45.9:53") // dns2.p09.nsone.net.
+	clientCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	in, err := dns.ExchangeContext(clientCtx, m, nameserverIPPort)
 	if err != nil {
-		return fmt.Errorf("exchange err: %w", err)
+		return 0, nil, fmt.Errorf("exchange err: %w", err)
 	}
-	fmt.Printf("rcode: %s\n", dns.RcodeToString[in.Rcode])
 	if len(in.Answer) < 1 {
-		return fmt.Errorf("no answers returned")
-	}
-	if t, ok := in.Answer[0].(*dns.A); ok {
-		fmt.Printf("%s\n", t.A)
-	} else {
-		return fmt.Errorf("not an a record: %s", in.Answer[0])
+		return 0, nil, fmt.Errorf("no answers returned")
 	}
 
-	return nil
+	answers := []string{}
+	for _, e := range in.Answer {
+		// TODO: don't rely on this being an A record! try to convert to proper type
+		if t, ok := e.(*dns.A); ok {
+			answers = append(answers, t.A.String())
+		} else {
+			return 0, nil, fmt.Errorf("not an a record: %s", e)
+		}
+	}
+
+	return in.Rcode, answers, nil
 }
