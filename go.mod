@@ -8,11 +8,12 @@ require (
 	go.bbkane.com/warg v0.0.16
 )
 
+require github.com/miekg/dns v1.1.52
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/miekg/dns v1.1.52 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
