@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sort"
 	"strconv"
 	"time"
 
@@ -37,20 +38,21 @@ func runDig(cmdCtx command.Context) error {
 
 	nameserverIPPort := nameserverIP + ":" + strconv.Itoa(nameserverPort)
 
-	rcode, answers, err := dig(
+	answers, err := dig(
 		fqdn,
 		rtype,
 		nameserverIPPort,
 		subnetIP,
 		timeout,
 	)
-	fmt.Printf("rcode: %s\n", dns.RcodeToString[rcode])
 	fmt.Printf("answers: %s\n", answers)
 	return err
 
 }
 
-func dig(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, timeout time.Duration) (int, []string, error) {
+// dig an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
+// Returns answers sorted
+func dig(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, timeout time.Duration) ([]string, error) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(fqdn), rtype)
 
@@ -88,21 +90,32 @@ func dig(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, ti
 
 	in, err := dns.ExchangeContext(clientCtx, m, nameserverIPPort)
 	if err != nil {
-		return 0, nil, fmt.Errorf("exchange err: %w", err)
+		return nil, fmt.Errorf("exchange err: %w", err)
 	}
+	if in.Rcode != dns.RcodeSuccess {
+		return nil, fmt.Errorf("non-success rcode: %s", dns.RcodeToString[in.Rcode])
+	}
+
 	if len(in.Answer) < 1 {
-		return 0, nil, fmt.Errorf("no answers returned")
+		// This can happen if we query for CNAME for example
+		return nil, fmt.Errorf("no answers returned")
 	}
 
 	answers := []string{}
 	for _, e := range in.Answer {
-		// TODO: don't rely on this being an A record! try to convert to proper type
-		if t, ok := e.(*dns.A); ok {
-			answers = append(answers, t.A.String())
-		} else {
-			return 0, nil, fmt.Errorf("not an a record: %s", e)
-		}
-	}
 
-	return in.Rcode, answers, nil
+		switch t := e.(type) {
+		case *dns.A:
+			answers = append(answers, t.A.String())
+		case *dns.AAAA:
+			answers = append(answers, t.AAAA.String())
+		case *dns.CNAME:
+			answers = append(answers, t.Target)
+		default:
+			return nil, fmt.Errorf("unknown record type: %T", e)
+		}
+
+	}
+	sort.Strings(answers)
+	return answers, nil
 }

@@ -78,5 +78,6 @@ func buildApp() warg.App {
 
 func main() {
 	app := buildApp()
+	// app.MustRun([]string{"shovel", "dig", "--rtype", "A"}, os.LookupEnv)
 	app.MustRun(os.Args, os.LookupEnv)
 }
