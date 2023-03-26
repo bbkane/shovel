@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/netip"
 	"os"
 	"time"
 
@@ -40,27 +41,17 @@ func buildApp() warg.App {
 					flag.Required(),
 				),
 				command.Flag(
-					"--nameserver-ip",
+					"--nameserver-addr-port",
 					"Nameserver to query",
-					scalar.String(
-						scalar.Default("198.51.45.9"), // dns2.p09.nsone.net.
-					),
-					// scalar.New(
-					// 	IP(),
-					// 	scalar.Default(netip.MustParseAddr("198.51.45.9")),
-					// ),
-					flag.Required(),
-				),
-				command.Flag(
-					"--nameserver-port",
-					"Port on the nameserver",
-					scalar.Int(
-						scalar.Default(53),
+					scalar.New(
+						AddrPort(),
+						scalar.Default(netip.MustParseAddrPort("198.51.45.9:53")),
 					),
 					flag.Required(),
 				),
+
 				command.Flag(
-					"--subnet-ip",
+					"--subnet-addr",
 					"Optional client subnet. 101.251.8.0 for China for example",
 					scalar.New(
 						Addr(),

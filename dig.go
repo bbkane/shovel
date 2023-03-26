@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/netip"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/miekg/dns"
@@ -17,12 +16,11 @@ func runDig(cmdCtx command.Context) error {
 
 	fqdn := cmdCtx.Flags["--fqdn"].(string)
 	rtypeStr := cmdCtx.Flags["--rtype"].(string)
-	nameserverIP := cmdCtx.Flags["--nameserver-ip"].(string)
-	nameserverPort := cmdCtx.Flags["--nameserver-port"].(int)
+	nameserverIP := cmdCtx.Flags["--nameserver-addr-port"].(netip.AddrPort)
 
 	// netip.Addr is comparable, but dig wants a net.IP
 	var subnetIP net.IP = nil
-	if sub, exists := cmdCtx.Flags["--subnet-ip"].(netip.Addr); exists {
+	if sub, exists := cmdCtx.Flags["--subnet-addr"].(netip.Addr); exists {
 		subnetIP = sub.AsSlice()
 	}
 
@@ -33,7 +31,7 @@ func runDig(cmdCtx command.Context) error {
 		return fmt.Errorf("Couldn't parse rtype: %v", rtype)
 	}
 
-	nameserverIPPort := nameserverIP + ":" + strconv.Itoa(nameserverPort)
+	nameserverIPPort := nameserverIP.String()
 
 	answers, err := dig(
 		fqdn,

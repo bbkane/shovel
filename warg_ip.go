@@ -43,3 +43,26 @@ func Addr() contained.ContainedTypeInfo[netip.Addr] {
 		FromString: ipFromString,
 	}
 }
+
+func AddrPort() contained.ContainedTypeInfo[netip.AddrPort] {
+	return contained.ContainedTypeInfo[netip.AddrPort]{
+		Description: "IP and Port number separated by a colon: ip:port ",
+		Empty: func() netip.AddrPort {
+			return netip.AddrPort{}
+		},
+		FromIFace: func(iFace interface{}) (netip.AddrPort, error) {
+			switch under := iFace.(type) {
+			case netip.AddrPort:
+				return under, nil
+			case string:
+				return netip.ParseAddrPort(under)
+			default:
+				return netip.AddrPort{}, contained.ErrIncompatibleInterface
+			}
+		},
+		FromString: netip.ParseAddrPort,
+		FromInstance: func(ap netip.AddrPort) (netip.AddrPort, error) {
+			return ap, nil
+		},
+	}
+}

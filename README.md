@@ -97,6 +97,6 @@ shovel dig \
     --fqdn linkedin.com \
     --type A \
     --ns-ip 1.2.3.4 \
-    --subnet-ip 1.2.3.4 \
+    --subnet-addr 1.2.3.4 \
     --timeout 2s \
 ```
