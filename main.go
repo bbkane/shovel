@@ -14,57 +14,63 @@ import (
 
 var version string
 
+func digOneCommand() command.Command {
+	return command.New(
+		"simple dig",
+		runDigOne,
+		command.Flag(
+			"--fqdn",
+			"FQDN to dig",
+			scalar.String(
+				scalar.Default("linkedin.com"),
+			),
+			flag.Required(),
+		),
+		command.Flag(
+			"--rtype",
+			"Record type",
+			scalar.String(
+				scalar.Default("A"),
+				scalar.Choices("A", "AAAA", "CNAME"),
+			),
+			flag.Required(),
+		),
+		command.Flag(
+			"--nameserver-addr-port",
+			"Nameserver to query",
+			scalar.New(
+				AddrPort(),
+				scalar.Default(netip.MustParseAddrPort("198.51.45.9:53")),
+			),
+			flag.Required(),
+		),
+
+		command.Flag(
+			"--subnet-addr",
+			"Optional client subnet. 101.251.8.0 for China for example",
+			scalar.New(
+				Addr(),
+			),
+		),
+		command.Flag(
+			"--timeout",
+			"Timeout for request",
+			scalar.Duration(
+				scalar.Default(2*time.Second),
+			),
+			flag.Required(),
+		),
+	)
+}
+
 func buildApp() warg.App {
 	app := warg.New(
 		"shovel",
 		section.New(
 			"Dig some stuff!",
-			section.Command(
-				"dig",
-				"simple dig",
-				runDig,
-				command.Flag(
-					"--fqdn",
-					"FQDN to dig",
-					scalar.String(
-						scalar.Default("linkedin.com"),
-					),
-					flag.Required(),
-				),
-				command.Flag(
-					"--rtype",
-					"Record type",
-					scalar.String(
-						scalar.Default("A"),
-						scalar.Choices("A", "AAAA", "CNAME"),
-					),
-					flag.Required(),
-				),
-				command.Flag(
-					"--nameserver-addr-port",
-					"Nameserver to query",
-					scalar.New(
-						AddrPort(),
-						scalar.Default(netip.MustParseAddrPort("198.51.45.9:53")),
-					),
-					flag.Required(),
-				),
-
-				command.Flag(
-					"--subnet-addr",
-					"Optional client subnet. 101.251.8.0 for China for example",
-					scalar.New(
-						Addr(),
-					),
-				),
-				command.Flag(
-					"--timeout",
-					"Timeout for request",
-					scalar.Duration(
-						scalar.Default(2*time.Second),
-					),
-					flag.Required(),
-				),
+			section.ExistingCommand(
+				"dig-one",
+				digOneCommand(),
 			),
 		),
 		warg.AddColorFlag(),

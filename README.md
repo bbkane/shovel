@@ -84,7 +84,8 @@ shovel dig \
 Some things warg really needs to make this ergonomic:
 
 - tab completion!
-- map value type'
+- map value type
+- golden tests
 
 Let's make a simpler mockup
 
@@ -100,3 +101,11 @@ shovel dig \
     --subnet-addr 1.2.3.4 \
     --timeout 2s \
 ```
+
+## Next steps
+
+- Update warg
+  - map value type
+  - golden tests
+  - Addr types
+- Add golden tests

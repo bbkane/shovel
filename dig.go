@@ -12,13 +12,13 @@ import (
 	"go.bbkane.com/warg/command"
 )
 
-func runDig(cmdCtx command.Context) error {
+func runDigOne(cmdCtx command.Context) error {
 
 	fqdn := cmdCtx.Flags["--fqdn"].(string)
 	rtypeStr := cmdCtx.Flags["--rtype"].(string)
 	nameserverIP := cmdCtx.Flags["--nameserver-addr-port"].(netip.AddrPort)
 
-	// netip.Addr is comparable, but dig wants a net.IP
+	// warg needs a netip.Addr because it's comparable, but dig wants a net.IP
 	var subnetIP net.IP = nil
 	if sub, exists := cmdCtx.Flags["--subnet-addr"].(netip.Addr); exists {
 		subnetIP = sub.AsSlice()
@@ -33,7 +33,7 @@ func runDig(cmdCtx command.Context) error {
 
 	nameserverIPPort := nameserverIP.String()
 
-	answers, err := dig(
+	answers, err := digOne(
 		fqdn,
 		rtype,
 		nameserverIPPort,
@@ -45,9 +45,9 @@ func runDig(cmdCtx command.Context) error {
 
 }
 
-// dig an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
+// digOne an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
 // Returns answers sorted
-func dig(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, timeout time.Duration) ([]string, error) {
+func digOne(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, timeout time.Duration) ([]string, error) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(fqdn), rtype)
 
