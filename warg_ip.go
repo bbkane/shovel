@@ -7,7 +7,7 @@ import (
 	"go.bbkane.com/warg/value/contained"
 )
 
-func ipFromString(s string) (netip.Addr, error) {
+func addrFromString(s string) (netip.Addr, error) {
 	addr, err := netip.ParseAddr(s)
 	if err != nil {
 		return netip.Addr{}, fmt.Errorf("could not parse ip from string: %s: %w", s, err)
@@ -32,7 +32,7 @@ func Addr() contained.ContainedTypeInfo[netip.Addr] {
 				}
 				return ip, nil
 			case string:
-				return ipFromString(under)
+				return addrFromString(under)
 			default:
 				return netip.Addr{}, contained.ErrIncompatibleInterface
 			}
@@ -40,7 +40,7 @@ func Addr() contained.ContainedTypeInfo[netip.Addr] {
 		FromInstance: func(a netip.Addr) (netip.Addr, error) {
 			return a, nil
 		},
-		FromString: ipFromString,
+		FromString: addrFromString,
 	}
 }
 
