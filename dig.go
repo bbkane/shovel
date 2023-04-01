@@ -34,26 +34,36 @@ func runDigOne(cmdCtx command.Context) error {
 	nameserverIPPort := nameserverIP.String()
 
 	answers, err := digOne(
-		fqdn,
-		rtype,
-		nameserverIPPort,
-		subnetIP,
-		timeout,
+		digOneParams{
+			FQDN:             fqdn,
+			Rtype:            rtype,
+			NameserverIPPort: nameserverIPPort,
+			SubnetIP:         subnetIP,
+			Timeout:          timeout,
+		},
 	)
 	fmt.Printf("answers: %s\n", answers)
 	return err
 
 }
 
+type digOneParams struct {
+	FQDN             string
+	Rtype            uint16
+	NameserverIPPort string
+	SubnetIP         net.IP
+	Timeout          time.Duration
+}
+
 // digOne an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
 // Returns answers sorted
-func digOne(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP, timeout time.Duration) ([]string, error) {
+func digOne(p digOneParams) ([]string, error) {
 	m := new(dns.Msg)
-	m.SetQuestion(dns.Fqdn(fqdn), rtype)
+	m.SetQuestion(dns.Fqdn(p.FQDN), p.Rtype)
 
 	// Add subnet!
 	// https://github.com/miekg/exdns/blob/d851fa434ad51cb84500b3e18b8aa7d3bead2c51/q/q.go#L209
-	if subnetIP != nil {
+	if p.SubnetIP != nil {
 		o := &dns.OPT{
 			Hdr: dns.RR_Header{
 				Name:     ".",
@@ -67,7 +77,7 @@ func digOne(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP,
 
 		e := &dns.EDNS0_SUBNET{
 			Code:          dns.EDNS0SUBNET,
-			Address:       subnetIP,
+			Address:       p.SubnetIP,
 			Family:        1, // IPv4
 			SourceNetmask: net.IPv4len * 8,
 			SourceScope:   0,
@@ -80,10 +90,10 @@ func digOne(fqdn string, rtype uint16, nameserverIPPort string, subnetIP net.IP,
 		m.Extra = append(m.Extra, o)
 	}
 
-	clientCtx, cancel := context.WithTimeout(context.Background(), timeout)
+	clientCtx, cancel := context.WithTimeout(context.Background(), p.Timeout)
 	defer cancel()
 
-	in, err := dns.ExchangeContext(clientCtx, m, nameserverIPPort)
+	in, err := dns.ExchangeContext(clientCtx, m, p.NameserverIPPort)
 	if err != nil {
 		return nil, fmt.Errorf("exchange err: %w", err)
 	}

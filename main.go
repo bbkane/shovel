@@ -38,8 +38,7 @@ func digOneCommand() command.Command {
 		command.Flag(
 			"--nameserver-addr-port",
 			"Nameserver to query",
-			scalar.New(
-				AddrPort(),
+			scalar.AddrPort(
 				scalar.Default(netip.MustParseAddrPort("198.51.45.9:53")),
 			),
 			flag.Required(),
@@ -48,9 +47,7 @@ func digOneCommand() command.Command {
 		command.Flag(
 			"--subnet-addr",
 			"Optional client subnet. 101.251.8.0 for China for example",
-			scalar.New(
-				Addr(),
-			),
+			scalar.Addr(),
 		),
 		command.Flag(
 			"--timeout",
