@@ -8,19 +8,34 @@ import (
 
 func TestStringCounter(t *testing.T) {
 	c := newStringCounter()
+	c.Add("4")
 	c.Add("1")
 	c.Add("2")
+	c.Add("3")
 	c.Add("2")
+	c.Add("3")
 
-	actualStrs := []string{}
-	actualCounts := []int{}
-	for i := c.IterCountDescending(); i.HasNext(); {
-		str, count := i.Next()
-		actualStrs = append(actualStrs, str)
-		actualCounts = append(actualCounts, count)
+	actual := c.AsSortedSlice()
+
+	expected := []stringCount{
+		{
+			String: "1",
+			Count:  1,
+		},
+		{
+			String: "2",
+			Count:  2,
+		},
+		{
+			String: "3",
+			Count:  2,
+		},
+		{
+			String: "4",
+			Count:  1,
+		},
 	}
-	expectedCounts := []int{2, 1}
-	expectedStrs := []string{"2", "1"}
-	require.Equal(t, expectedCounts, actualCounts)
-	require.Equal(t, expectedStrs, actualStrs)
+
+	require.Equal(t, expected, actual)
+
 }
