@@ -2,14 +2,23 @@ package main
 
 import (
 	"net"
+	"net/netip"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/require"
+	"go.bbkane.com/warg"
+	"go.bbkane.com/warg/command"
 )
 
 func Test_digOne(t *testing.T) {
+
+	integrationTest := os.Getenv("SHOVEL_INTEGRATION_TEST") != ""
+	if !integrationTest {
+		t.Skipf("To run integration tests, run: SHOVEL_INTEGRATION_TEST=1 go test ./... ")
+	}
 
 	tests := []struct {
 		name        string
@@ -55,6 +64,201 @@ func Test_digOne(t *testing.T) {
 			}
 
 			require.Equal(t, tt.expected, actual)
+
+		})
+	}
+}
+
+func Test_cmdCtxToDigOneparams(t *testing.T) {
+	tests := []struct {
+		name           string
+		args           []string
+		cmdCtx         command.Context
+		expectedParams *digOneParams
+		expectedCount  int
+		expectedErr    bool
+	}{
+		{
+			name: "noSubnet",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "198.51.45.9:53",
+				// no --ns-map
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: &digOneParams{
+				FQDN:             "linkedin.com",
+				Rtype:            dns.TypeA,
+				NameserverIPPort: "198.51.45.9:53",
+				SubnetIP:         nil,
+				Timeout:          2 * time.Second,
+			},
+			expectedCount: 1,
+			expectedErr:   false,
+		},
+		{
+			name: "subnetPassedAsArg",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "198.51.45.9:53",
+				// no --ns-map
+				"--subnet", "1.2.3.0",
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: &digOneParams{
+				FQDN:             "linkedin.com",
+				Rtype:            dns.TypeA,
+				NameserverIPPort: "198.51.45.9:53",
+				SubnetIP:         net.ParseIP("1.2.3.0"),
+				Timeout:          2 * time.Second,
+			},
+			expectedCount: 1,
+			expectedErr:   false,
+		},
+		{
+			name: "badSubnetPassedAsArg",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "198.51.45.9:53",
+				// no --ns-map
+				"--subnet", "badSubnet",
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: nil,
+			expectedCount:  0,
+			expectedErr:    true,
+		},
+		{
+			name: "subnetFromMap",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "198.51.45.9:53",
+				// no --ns-map
+				"--subnet", "mysubnet",
+				"--subnet-map", "mysubnet=3.4.5.0",
+				"--timeout", "2s",
+			},
+			expectedParams: &digOneParams{
+				FQDN:             "linkedin.com",
+				Rtype:            dns.TypeA,
+				NameserverIPPort: "198.51.45.9:53",
+				SubnetIP:         net.ParseIP("3.4.5.0"),
+				Timeout:          2 * time.Second,
+			},
+			expectedCount: 1,
+			expectedErr:   false,
+		},
+		// --ns tests!
+		{
+			name: "nsPassedAsArg",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "198.51.45.9:53",
+				// no --ns-map
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: &digOneParams{
+				FQDN:             "linkedin.com",
+				Rtype:            dns.TypeA,
+				NameserverIPPort: "198.51.45.9:53",
+				SubnetIP:         nil,
+				Timeout:          2 * time.Second,
+			},
+			expectedCount: 1,
+			expectedErr:   false,
+		},
+		{
+			name: "badNSPassedAsArg",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "badns",
+				// no --ns-map
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: nil,
+			expectedCount:  0,
+			expectedErr:    true,
+		},
+		{
+			name: "nsFromMap",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "nsFromMap",
+				"--ns-map", "nsFromMap=1.2.3.4:53",
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: &digOneParams{
+				FQDN:             "linkedin.com",
+				Rtype:            dns.TypeA,
+				NameserverIPPort: "1.2.3.4:53",
+				SubnetIP:         nil,
+				Timeout:          2 * time.Second,
+			},
+			expectedCount: 1,
+			expectedErr:   false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			app := buildApp()
+			pr, err := app.Parse(tt.args, warg.LookupMap(nil))
+			require.Nil(t, err)
+
+			actualParams, actualCount, actualErr := cmdCtxToDigOneparams(pr.Context)
+			if tt.expectedErr {
+				require.NotNil(t, actualErr)
+				return
+			} else {
+				require.Nil(t, actualErr)
+			}
+
+			// NOTE: net.IP is a slice of bytes and can have multiple []byte representations
+			// so let's "normalize" them :)
+			if tt.expectedParams.SubnetIP != nil {
+				tt.expectedParams.SubnetIP = netip.MustParseAddr(
+					tt.expectedParams.SubnetIP.String(),
+				).AsSlice()
+			}
+			if actualParams.SubnetIP != nil {
+				actualParams.SubnetIP = netip.MustParseAddr(
+					actualParams.SubnetIP.String(),
+				).AsSlice()
+			}
+
+			require.Equal(t, tt.expectedParams, actualParams)
+			require.Equal(t, tt.expectedCount, actualCount)
 
 		})
 	}

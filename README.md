@@ -102,10 +102,44 @@ shovel dig \
     --timeout 2s \
 ```
 
+## Output ideas
+
+### dig + table
+
+```
+# ns: us=1.2.3.4, #subnet: china=1.2.3.0, count=100, timeout=2s
+# dig +subnet=1.2.3.0 @1.2.3.4 linkedin.com A
+
+| Answers         | Count |
+| --------------- | ----- |
+| 1.2.3.4 3.4.5.6 | 4     |
+```
+
+I don't like the way answers can balloon, but newlines in markdown tablers are awkward..
+
+### dig + yaml
+
+```
+# ns: us=1.2.3.4, #subnet: china=1.2.3.0, count=100, timeout=2s
+# dig +subnet=1.2.3.0 @1.2.3.4 linkedin.com A
+
+answers:
+- answers:
+  - 1.2.3.4
+  - 3.4.5.6
+  count: 50
+- answers:
+  - 8.2.3.4
+  - 9.4.5.6
+  count: 40
+errors:
+- error: timeout
+  count: 10
+- error: something else
+  count: 5
+```
+
+Ok, looks good to start at least!
+
 ## Next steps
 
-- Update warg
-  - map value type
-  - golden tests
-  - Addr types
-- Add golden tests

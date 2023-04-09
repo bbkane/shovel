@@ -5,7 +5,7 @@ go 1.19
 
 require (
 	go.bbkane.com/gocolor v0.0.4 // indirect
-	go.bbkane.com/warg v0.0.17
+	go.bbkane.com/warg v0.0.18
 )
 
 require (
