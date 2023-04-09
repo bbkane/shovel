@@ -141,5 +141,15 @@ errors:
 
 Ok, looks good to start at least!
 
+## table
+
+Subnet, ns, fqdn, rtype, count, timeout, answer, answer_count, error, error_count
+
+this can have multiple answer sets.... and multiple error sets... need table coalescing or some sort of error 
+
+https://github.com/jedib0t/go-pretty/tree/main/table
+
+I can make it look good with this I'm sure :)
+
 ## Next steps
 

@@ -31,7 +31,7 @@ func getSubnet(subnetMap map[string]netip.Addr, subnet *string) (net.IP, error) 
 	return subIP, nil
 }
 
-func cmdCtxToDigOneparams(cmdCtx command.Context) (*digOneParams, int, error) {
+func cmdCtxToDigRepeatParams(cmdCtx command.Context) (*digRepeatParams, error) {
 	// TODO:
 	// - make another function to turn cmdCtx into digOneParams, count, so I can easily test it with app.Parse
 	// - ns is now a string, so get that...
@@ -54,13 +54,13 @@ func cmdCtxToDigOneparams(cmdCtx command.Context) (*digOneParams, int, error) {
 	}
 	subnetIP, err := getSubnet(subnetMap, subnetStr)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	rtypeStr := cmdCtx.Flags["--rtype"].(string)
 	rtype, ok := dns.StringToType[rtypeStr]
 	if !ok {
-		return nil, 0, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+		return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
 	}
 
 	// nameserverIP := cmdCtx.Flags["--ns"].(netip.AddrPort)
@@ -77,36 +77,37 @@ func cmdCtxToDigOneparams(cmdCtx command.Context) (*digOneParams, int, error) {
 	} else {
 		_, err := netip.ParseAddrPort(nameserverIPPort)
 		if err != nil {
-			return nil, 0, fmt.Errorf("could not parse --ns: %s : %w", nameserverIPPort, err)
+			return nil, fmt.Errorf("could not parse --ns: %s : %w", nameserverIPPort, err)
 		}
 	}
 
-	p := digOneParams{
-		FQDN:             fqdn,
-		Rtype:            rtype,
-		NameserverIPPort: nameserverIPPort,
-		SubnetIP:         subnetIP,
-		Timeout:          timeout,
-	}
-	return &p, count, nil
+	return &digRepeatParams{
+		DigOneParams: digOneParams{
+			FQDN:             fqdn,
+			Rtype:            rtype,
+			NameserverIPPort: nameserverIPPort,
+			SubnetIP:         subnetIP,
+			Timeout:          timeout,
+		},
+		Count: count,
+	}, nil
 }
 
 func runDig(cmdCtx command.Context) error {
 
-	p, count, err := cmdCtxToDigOneparams(cmdCtx)
+	p, err := cmdCtxToDigRepeatParams(cmdCtx)
 	if err != nil {
 		return err
 	}
 
 	answers, errors := digRepeat(
 		*p,
-		count,
 	)
-	printDigRepeat(*p, count, answers, errors)
+	printDigRepeat(*p, answers, errors)
 	return nil
 }
 
-func printDigRepeat(p digOneParams, count int, answers []stringSliceCount, errors []stringCount) {
+func printDigRepeat(p digRepeatParams, answers []stringSliceCount, errors []stringCount) {
 	fmt.Printf("answers: %#v\n", answers)
 	fmt.Printf("errors: %#v\n", errors)
 }
@@ -189,12 +190,17 @@ func digOne(p digOneParams) ([]string, error) {
 	return answers, nil
 }
 
-func digRepeat(p digOneParams, count int) ([]stringSliceCount, []stringCount) {
+type digRepeatParams struct {
+	DigOneParams digOneParams
+	Count        int
+}
+
+func digRepeat(p digRepeatParams) ([]stringSliceCount, []stringCount) {
 	answerCounter := newStringSliceCounter()
 	errorCounter := newStringCounter()
 
-	for i := 0; i < count; i++ {
-		answer, err := digOne(p)
+	for i := 0; i < p.Count; i++ {
+		answer, err := digOne(p.DigOneParams)
 		if err != nil {
 			errorCounter.Add(err.Error())
 		} else {
