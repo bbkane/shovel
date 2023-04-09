@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"os"
 	"sort"
+	"strings"
 	"time"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/miekg/dns"
 	"go.bbkane.com/warg/command"
 )
@@ -193,7 +196,45 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) (*digRepeatParams, error) {
 }
 
 func printDigRepeat(p digRepeatParams, r digRepeatResult) {
-	fmt.Printf("answers: %#v\n", r)
+	// fmt.Printf("answers: %#v\n", r)
+	t := table.NewWriter()
+	t.SetStyle(table.StyleBold)
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Count", "FQDN", "Rtype", "Nameserver", "Subnet", "Timeout", "Answer", "AnswerCount", "Error", "ErrorCount"})
+	// answers
+	for _, ans := range r.Answers {
+		t.AppendRow(table.Row{
+			p.Count,
+			p.DigOneParams.FQDN,
+			dns.TypeToString[p.DigOneParams.Rtype],
+			p.DigOneParams.NameserverIPPort,
+			p.DigOneParams.SubnetIP.String(),
+			p.DigOneParams.Timeout,
+			strings.Join(ans.StringSlice, "\n"),
+			ans.Count,
+			"", // Error
+			"", // ErrorCount
+		})
+	}
+	// errors
+	for _, err := range r.Errors {
+		t.AppendRow(table.Row{
+			p.Count,
+			p.DigOneParams.FQDN,
+			dns.TypeToString[p.DigOneParams.Rtype],
+			p.DigOneParams.NameserverIPPort,
+			p.DigOneParams.SubnetIP.String(),
+			p.DigOneParams.Timeout,
+			"", // Answer
+			"", // AnswerCount
+			err.String,
+			err.Count,
+		})
+	}
+
+	t.AppendSeparator()
+
+	t.Render()
 }
 
 func runDig(cmdCtx command.Context) error {
