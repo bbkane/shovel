@@ -198,35 +198,27 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) (*digRepeatParams, error) {
 func printDigRepeat(p digRepeatParams, r digRepeatResult) {
 	// fmt.Printf("answers: %#v\n", r)
 	t := table.NewWriter()
-	t.SetStyle(table.StyleBold)
+	t.SetStyle(table.StyleRounded)
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Count", "FQDN", "Rtype", "Nameserver", "Subnet", "Timeout", "Answer", "AnswerCount", "Error", "ErrorCount"})
+	t.AppendHeader(table.Row{"FQDN", "Rtype", "Nameserver", "Subnet", "Ans/Err", "Count"})
 	// answers
 	for _, ans := range r.Answers {
 		t.AppendRow(table.Row{
-			p.Count,
 			p.DigOneParams.FQDN,
 			dns.TypeToString[p.DigOneParams.Rtype],
 			p.DigOneParams.NameserverIPPort,
 			p.DigOneParams.SubnetIP.String(),
-			p.DigOneParams.Timeout,
 			strings.Join(ans.StringSlice, "\n"),
 			ans.Count,
-			"", // Error
-			"", // ErrorCount
 		})
 	}
 	// errors
 	for _, err := range r.Errors {
 		t.AppendRow(table.Row{
-			p.Count,
 			p.DigOneParams.FQDN,
 			dns.TypeToString[p.DigOneParams.Rtype],
 			p.DigOneParams.NameserverIPPort,
 			p.DigOneParams.SubnetIP.String(),
-			p.DigOneParams.Timeout,
-			"", // Answer
-			"", // AnswerCount
 			err.String,
 			err.Count,
 		})
