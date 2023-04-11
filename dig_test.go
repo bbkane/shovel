@@ -91,7 +91,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--timeout", "2s",
 			},
 			expectedParams: []digRepeatParams{
-				digRepeatParams{
+				{
 					DigOneParams: digOneParams{
 						FQDN:             "linkedin.com",
 						Rtype:            dns.TypeA,
@@ -118,7 +118,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--timeout", "2s",
 			},
 			expectedParams: []digRepeatParams{
-				digRepeatParams{
+				{
 					DigOneParams: digOneParams{
 						FQDN:             "linkedin.com",
 						Rtype:            dns.TypeA,
@@ -161,7 +161,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--timeout", "2s",
 			},
 			expectedParams: []digRepeatParams{
-				digRepeatParams{
+				{
 					DigOneParams: digOneParams{
 						FQDN:             "linkedin.com",
 						Rtype:            dns.TypeA,
@@ -189,7 +189,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--timeout", "2s",
 			},
 			expectedParams: []digRepeatParams{
-				digRepeatParams{
+				{
 					DigOneParams: digOneParams{
 						FQDN:             "linkedin.com",
 						Rtype:            dns.TypeA,
@@ -232,7 +232,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--timeout", "2s",
 			},
 			expectedParams: []digRepeatParams{
-				digRepeatParams{
+				{
 					DigOneParams: digOneParams{
 						FQDN:             "linkedin.com",
 						Rtype:            dns.TypeA,
