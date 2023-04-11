@@ -74,7 +74,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 		name           string
 		args           []string
 		cmdCtx         command.Context
-		expectedParams *digRepeatParams
+		expectedParams []digRepeatParams
 		expectedErr    bool
 	}{
 		{
@@ -90,15 +90,17 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				// no --subnet-map
 				"--timeout", "2s",
 			},
-			expectedParams: &digRepeatParams{
-				DigOneParams: digOneParams{
-					FQDN:             "linkedin.com",
-					Rtype:            dns.TypeA,
-					NameserverIPPort: "198.51.45.9:53",
-					SubnetIP:         nil,
-					Timeout:          2 * time.Second,
+			expectedParams: []digRepeatParams{
+				digRepeatParams{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "198.51.45.9:53",
+						SubnetIP:         nil,
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
 				},
-				Count: 1,
 			},
 			expectedErr: false,
 		},
@@ -115,15 +117,17 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				// no --subnet-map
 				"--timeout", "2s",
 			},
-			expectedParams: &digRepeatParams{
-				DigOneParams: digOneParams{
-					FQDN:             "linkedin.com",
-					Rtype:            dns.TypeA,
-					NameserverIPPort: "198.51.45.9:53",
-					SubnetIP:         net.ParseIP("1.2.3.0"),
-					Timeout:          2 * time.Second,
+			expectedParams: []digRepeatParams{
+				digRepeatParams{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "198.51.45.9:53",
+						SubnetIP:         net.ParseIP("1.2.3.0"),
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
 				},
-				Count: 1,
 			},
 			expectedErr: false,
 		},
@@ -156,15 +160,17 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--subnet-map", "mysubnet=3.4.5.0",
 				"--timeout", "2s",
 			},
-			expectedParams: &digRepeatParams{
-				DigOneParams: digOneParams{
-					FQDN:             "linkedin.com",
-					Rtype:            dns.TypeA,
-					NameserverIPPort: "198.51.45.9:53",
-					SubnetIP:         net.ParseIP("3.4.5.0"),
-					Timeout:          2 * time.Second,
+			expectedParams: []digRepeatParams{
+				digRepeatParams{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "198.51.45.9:53",
+						SubnetIP:         net.ParseIP("3.4.5.0"),
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
 				},
-				Count: 1,
 			},
 			expectedErr: false,
 		},
@@ -182,15 +188,17 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				// no --subnet-map
 				"--timeout", "2s",
 			},
-			expectedParams: &digRepeatParams{
-				DigOneParams: digOneParams{
-					FQDN:             "linkedin.com",
-					Rtype:            dns.TypeA,
-					NameserverIPPort: "198.51.45.9:53",
-					SubnetIP:         nil,
-					Timeout:          2 * time.Second,
+			expectedParams: []digRepeatParams{
+				digRepeatParams{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "198.51.45.9:53",
+						SubnetIP:         nil,
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
 				},
-				Count: 1,
 			},
 			expectedErr: false,
 		},
@@ -223,17 +231,18 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				// no --subnet-map
 				"--timeout", "2s",
 			},
-			expectedParams: &digRepeatParams{
-				DigOneParams: digOneParams{
-					FQDN:             "linkedin.com",
-					Rtype:            dns.TypeA,
-					NameserverIPPort: "1.2.3.4:53",
-					SubnetIP:         nil,
-					Timeout:          2 * time.Second,
+			expectedParams: []digRepeatParams{
+				digRepeatParams{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "1.2.3.4:53",
+						SubnetIP:         nil,
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
 				},
-				Count: 1,
 			},
-
 			expectedErr: false,
 		},
 	}
@@ -254,15 +263,19 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 
 			// NOTE: net.IP is a slice of bytes and can have multiple []byte representations
 			// so let's "normalize" them :)
-			if tt.expectedParams.DigOneParams.SubnetIP != nil {
-				tt.expectedParams.DigOneParams.SubnetIP = netip.MustParseAddr(
-					tt.expectedParams.DigOneParams.SubnetIP.String(),
-				).AsSlice()
+			for i := 0; i < len(tt.expectedParams); i++ {
+				if tt.expectedParams[i].DigOneParams.SubnetIP != nil {
+					tt.expectedParams[i].DigOneParams.SubnetIP = netip.MustParseAddr(
+						tt.expectedParams[i].DigOneParams.SubnetIP.String(),
+					).AsSlice()
+				}
 			}
-			if actualParams.DigOneParams.SubnetIP != nil {
-				actualParams.DigOneParams.SubnetIP = netip.MustParseAddr(
-					actualParams.DigOneParams.SubnetIP.String(),
-				).AsSlice()
+			for i := 0; i < len(actualParams); i++ {
+				if actualParams[i].DigOneParams.SubnetIP != nil {
+					actualParams[i].DigOneParams.SubnetIP = netip.MustParseAddr(
+						actualParams[i].DigOneParams.SubnetIP.String(),
+					).AsSlice()
+				}
 			}
 
 			require.Equal(t, tt.expectedParams, actualParams)

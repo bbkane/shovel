@@ -29,11 +29,11 @@ func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, error) {
 	return subIP, nil
 }
 
-func cmdCtxToDigRepeatParams(cmdCtx command.Context) (*digRepeatParams, error) {
+func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) {
 
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
-	fqdn := cmdCtx.Flags["--fqdn"].([]string)
+	fqdns := cmdCtx.Flags["--fqdn"].([]string)
 	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
 
 	// rtypes
@@ -95,26 +95,31 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) (*digRepeatParams, error) {
 		}
 	}
 
-	fmt.Printf("ns: %#v\n", nameservers)
+	digRepeatParamsSlice := []digRepeatParams{}
 
-	return &digRepeatParams{
-		DigOneParams: digOneParams{
-			FQDN:             fqdn[0],
-			Rtype:            rtypes[0],
-			NameserverIPPort: nameservers[0],
-			SubnetIP:         subnets[0],
-			Timeout:          timeout,
-		},
-		Count: count,
-	}, nil
+	for _, fqdn := range fqdns {
+		for _, rtype := range rtypes {
+			for _, nameserver := range nameservers {
+				for _, subnet := range subnets {
+					digRepeatParamsSlice = append(digRepeatParamsSlice, digRepeatParams{
+						DigOneParams: digOneParams{
+							FQDN:             fqdn,
+							Rtype:            rtype,
+							NameserverIPPort: nameserver,
+							SubnetIP:         subnet,
+							Timeout:          timeout,
+						},
+						Count: count,
+					})
+				}
+			}
+		}
+	}
+	return digRepeatParamsSlice, nil
 }
 
-func printDigRepeat(p digRepeatParams, r digRepeatResult) {
-	// fmt.Printf("answers: %#v\n", r)
-	t := table.NewWriter()
-	t.SetStyle(table.StyleRounded)
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"FQDN", "Rtype", "Nameserver", "Subnet", "Ans/Err", "Count"})
+func printDigRepeat(t table.Writer, p digRepeatParams, r digRepeatResult) {
+
 	// answers
 	for _, ans := range r.Answers {
 		t.AppendRow(table.Row{
@@ -140,19 +145,27 @@ func printDigRepeat(p digRepeatParams, r digRepeatResult) {
 
 	t.AppendSeparator()
 
-	t.Render()
 }
 
 func runDig(cmdCtx command.Context) error {
 
-	p, err := cmdCtxToDigRepeatParams(cmdCtx)
+	ps, err := cmdCtxToDigRepeatParams(cmdCtx)
 	if err != nil {
 		return err
 	}
 
-	result := digRepeat(
-		*p,
-	)
-	printDigRepeat(*p, result)
+	results := digVaried(ps)
+
+	t := table.NewWriter()
+	t.SetStyle(table.StyleRounded)
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"FQDN", "Rtype", "Nameserver", "Subnet", "Ans/Err", "Count"})
+
+	for i := 0; i < len(ps); i++ {
+		printDigRepeat(t, ps[i], results[i])
+	}
+
+	t.Render()
+
 	return nil
 }
