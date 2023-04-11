@@ -10,6 +10,7 @@ import (
 	"go.bbkane.com/warg/section"
 	"go.bbkane.com/warg/value/dict"
 	"go.bbkane.com/warg/value/scalar"
+	"go.bbkane.com/warg/value/slice"
 )
 
 var version string
@@ -28,26 +29,26 @@ func digOneCommand() command.Command {
 		),
 		command.Flag(
 			"--fqdn",
-			"FQDN to dig",
-			scalar.String(
-				scalar.Default("linkedin.com"),
+			"FQDNs to dig",
+			slice.String(
+				slice.Default([]string{"linkedin.com"}),
 			),
 			flag.Required(),
 		),
 		command.Flag(
 			"--rtype",
 			"Record type",
-			scalar.String(
-				scalar.Default("A"),
-				scalar.Choices("A", "AAAA", "CNAME"),
+			slice.String(
+				slice.Default([]string{"A"}),
+				slice.Choices("A", "AAAA", "CNAME"),
 			),
 			flag.Required(),
 		),
 		command.Flag(
 			"--ns",
 			"Nameserver IP + port to query. Example: 198.51.45.9:53",
-			scalar.String(
-				scalar.Default("198.51.45.9:53"),
+			slice.String(
+				slice.Default([]string{"198.51.45.9:53"}),
 			),
 			flag.Required(),
 		),
@@ -59,7 +60,7 @@ func digOneCommand() command.Command {
 		command.Flag(
 			"--subnet",
 			"Optional client subnet. 101.251.8.0 for China for example",
-			scalar.String(),
+			slice.String(),
 		),
 		command.Flag(
 			"--subnet-map",
@@ -68,7 +69,7 @@ func digOneCommand() command.Command {
 		),
 		command.Flag(
 			"--timeout",
-			"Timeout for request",
+			"Timeout for each individual DNS request",
 			scalar.Duration(
 				scalar.Default(2*time.Second),
 			),

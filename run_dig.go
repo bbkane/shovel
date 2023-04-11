@@ -14,73 +14,95 @@ import (
 )
 
 // getSubnet, either from --subnet-map or directly from subnet.
-func getSubnet(subnetMap map[string]netip.Addr, subnet *string) (net.IP, error) {
-	if subnet == nil {
-		return nil, nil
-	}
+func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, error) {
 
 	// check in map
-	if subAddr, exists := subnetMap[*subnet]; exists {
+	if subAddr, exists := subnetMap[subnet]; exists {
 		return subAddr.AsSlice(), nil
 	}
 
 	// try to parse directly
-	subIP := net.ParseIP(*subnet)
+	subIP := net.ParseIP(subnet)
 	if subIP == nil {
-		return nil, fmt.Errorf("Could not parse IP: %s", *subnet)
+		return nil, fmt.Errorf("Could not parse IP: %s", subnet)
 	}
 	return subIP, nil
 }
 
 func cmdCtxToDigRepeatParams(cmdCtx command.Context) (*digRepeatParams, error) {
 
+	// simple params
 	count := cmdCtx.Flags["--count"].(int)
-	fqdn := cmdCtx.Flags["--fqdn"].(string)
+	fqdn := cmdCtx.Flags["--fqdn"].([]string)
 	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
 
-	// get ns IP:Port
+	// rtypes
+	rtypeStrs := cmdCtx.Flags["--rtype"].([]string)
+	var rtypes []uint16
+	for _, rtypeStr := range rtypeStrs {
+		rtype, ok := dns.StringToType[rtypeStr]
+		if !ok {
+			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+		}
+		rtypes = append(rtypes, rtype)
+	}
 
-	// Get a subnet
+	// subnets
+	var subnets []net.IP
+
 	var subnetMap map[string]netip.Addr = nil
 	if sm, exists := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr); exists {
 		subnetMap = sm
 	}
-	var subnetStr *string = nil
-	if sub, exists := cmdCtx.Flags["--subnet"].(string); exists {
-		subnetStr = &sub
-	}
-	subnetIP, err := getSubnet(subnetMap, subnetStr)
-	if err != nil {
-		return nil, err
+
+	subnetStrs, _ := cmdCtx.Flags["--subnet"].([]string)
+
+	for _, subnetStr := range subnetStrs {
+		subnetIP, err := getSubnet(subnetMap, subnetStr)
+		if err != nil {
+			return nil, err
+		}
+		subnets = append(subnets, subnetIP)
 	}
 
-	rtypeStr := cmdCtx.Flags["--rtype"].(string)
-	rtype, ok := dns.StringToType[rtypeStr]
-	if !ok {
-		return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+	// If we don't have any subnets, just use a list of one nil subnet :)
+	if len(subnets) == 0 {
+		subnets = append(subnets, nil)
 	}
 
-	nameserverIPPort := cmdCtx.Flags["--ns"].(string)
+	// nameservers
+	var nameservers []string
+
 	var nameserverMap map[string]netip.AddrPort = nil
 	if nsm, exists := cmdCtx.Flags["--ns-map"].(map[string]netip.AddrPort); exists {
 		nameserverMap = nsm
 	}
-	// check in map
-	if nsAddrPort, exists := nameserverMap[nameserverIPPort]; exists {
-		nameserverIPPort = nsAddrPort.String()
-	} else {
-		_, err := netip.ParseAddrPort(nameserverIPPort)
-		if err != nil {
-			return nil, fmt.Errorf("could not parse --ns: %s : %w", nameserverIPPort, err)
+
+	// These might be names Or IP:Port, so let's not commit to this slice
+	nameserverStrs := cmdCtx.Flags["--ns"].([]string)
+
+	for _, nameserverStr := range nameserverStrs {
+		// check in map
+		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
+			nameservers = append(nameservers, nsAddrPort.String())
+		} else {
+			// try to parse directly
+			_, err := netip.ParseAddrPort(nameserverStr)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse --ns: %s : %w", nameserverStr, err)
+			}
+			nameservers = append(nameservers, nameserverStr)
 		}
 	}
 
+	fmt.Printf("ns: %#v\n", nameservers)
+
 	return &digRepeatParams{
 		DigOneParams: digOneParams{
-			FQDN:             fqdn,
-			Rtype:            rtype,
-			NameserverIPPort: nameserverIPPort,
-			SubnetIP:         subnetIP,
+			FQDN:             fqdn[0],
+			Rtype:            rtypes[0],
+			NameserverIPPort: nameservers[0],
+			SubnetIP:         subnets[0],
 			Timeout:          timeout,
 		},
 		Count: count,
