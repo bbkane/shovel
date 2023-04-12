@@ -11,7 +11,32 @@ Note that this is not in Homebrew yet.
 ![./demo.gif](./demo.gif)
 
 ```bash
-shovel hello
+$ go run . dig --count 10 --fqdn www.linkedin.com --rtype CNAME --subnet-map china=101.251.8.0 --subnet-map usa=100.43.128.0 --subnet china --subnet usa --ns-map ns1=198.51.44.9:53 --ns-map dyn=108.59.161.43:53 --ns-map google=8.8.8.8:53 --ns ns1 --ns dyn --ns google
+╭──────────────────┬───────┬──────────────┬──────────────────┬───────────────────────────────────────┬───────╮
+│ FQDN             │ RTYPE │ SUBNET       │ NAMESERVER       │ ANS/ERR                               │ COUNT │
+├──────────────────┼───────┼──────────────┼──────────────────┼───────────────────────────────────────┼───────┤
+│ www.linkedin.com │ CNAME │ # china      │ # ns1            │ pop-az-be.www.linkedin.com.           │     5 │
+│                  │       │ 101.251.8.0  │ 198.51.44.9:53   │                                       │       │
+│                  │       │              │                  │ pop-az-sh.www.linkedin.com.           │     5 │
+│                  │       │              │                  │                                       │       │
+│                  │       │              ├──────────────────┼───────────────────────────────────────┼───────┤
+│                  │       │              │ # dyn            │ pop-az-be-lor1.www.linkedin.com.      │     4 │
+│                  │       │              │ 108.59.161.43:53 │ pop-az-be.www.linkedin.com.           │       │
+│                  │       │              │                  │ pop-az-sh-lor1.www.linkedin.com.      │     6 │
+│                  │       │              │                  │ pop-az-sh.www.linkedin.com.           │       │
+│                  │       │              ├──────────────────┼───────────────────────────────────────┼───────┤
+│                  │       │              │ # google         │ non-success rcode: REFUSED            │    10 │
+│                  │       │              │ 8.8.8.8:53       │                                       │       │
+│                  │       ├──────────────┼──────────────────┼───────────────────────────────────────┼───────┤
+│                  │       │ # usa        │ # ns1            │ www-linkedin-com.l-0005.l-msedge.net. │    10 │
+│                  │       │ 100.43.128.0 │ 198.51.44.9:53   │                                       │       │
+│                  │       │              ├──────────────────┼───────────────────────────────────────┼───────┤
+│                  │       │              │ # dyn            │ www-linkedin-com.l-0005.l-msedge.net. │    10 │
+│                  │       │              │ 108.59.161.43:53 │                                       │       │
+│                  │       │              ├──────────────────┼───────────────────────────────────────┼───────┤
+│                  │       │              │ # google         │ non-success rcode: REFUSED            │    10 │
+│                  │       │              │ 8.8.8.8:53       │                                       │       │
+╰──────────────────┴───────┴──────────────┴──────────────────┴───────────────────────────────────────┴───────╯
 ```
 
 ## Install
@@ -145,7 +170,7 @@ Ok, looks good to start at least!
 
 Subnet, ns, fqdn, rtype, count, timeout, answer, answer_count, error, error_count
 
-this can have multiple answer sets.... and multiple error sets... need table coalescing or some sort of error 
+this can have multiple answer sets.... and multiple error sets... need table coalescing or some sort of error
 
 https://github.com/jedib0t/go-pretty/tree/main/table
 

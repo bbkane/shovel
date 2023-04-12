@@ -75,6 +75,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 		args           []string
 		cmdCtx         command.Context
 		expectedParams []digRepeatParams
+		expectedNames  *nameMaps
 		expectedErr    bool
 	}{
 		{
@@ -102,7 +103,8 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 					Count: 1,
 				},
 			},
-			expectedErr: false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{}},
+			expectedErr:   false,
 		},
 		{
 			name: "subnetPassedAsArg",
@@ -129,7 +131,8 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 					Count: 1,
 				},
 			},
-			expectedErr: false,
+			expectedErr:   false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{"1.2.3.0": "passed ip"}},
 		},
 		{
 			name: "badSubnetPassedAsArg",
@@ -146,6 +149,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 			},
 			expectedParams: nil,
 			expectedErr:    true,
+			expectedNames:  nil,
 		},
 		{
 			name: "subnetFromMap",
@@ -172,7 +176,8 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 					Count: 1,
 				},
 			},
-			expectedErr: false,
+			expectedErr:   false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{"3.4.5.0": "mysubnet"}},
 		},
 		// --ns tests!
 		{
@@ -200,7 +205,8 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 					Count: 1,
 				},
 			},
-			expectedErr: false,
+			expectedErr:   false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{}},
 		},
 		{
 			name: "badNSPassedAsArg",
@@ -217,6 +223,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 			},
 			expectedParams: nil,
 			expectedErr:    true,
+			expectedNames:  nil,
 		},
 		{
 			name: "nsFromMap",
@@ -243,7 +250,8 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 					Count: 1,
 				},
 			},
-			expectedErr: false,
+			expectedErr:   false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"}, SubnetNames: map[string]string{}},
 		},
 	}
 	for _, tt := range tests {
@@ -253,13 +261,15 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 			pr, err := app.Parse(tt.args, warg.LookupMap(nil))
 			require.Nil(t, err)
 
-			actualParams, actualErr := cmdCtxToDigRepeatParams(pr.Context)
+			actualParams, actualNames, actualErr := cmdCtxToDigRepeatParams(pr.Context)
 			if tt.expectedErr {
 				require.NotNil(t, actualErr)
 				return
 			} else {
 				require.Nil(t, actualErr)
 			}
+
+			require.Equal(t, tt.expectedNames, actualNames)
 
 			// NOTE: net.IP is a slice of bytes and can have multiple []byte representations
 			// so let's "normalize" them :)

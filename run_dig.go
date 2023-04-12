@@ -14,22 +14,29 @@ import (
 )
 
 // getSubnet, either from --subnet-map or directly from subnet.
-func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, error) {
+func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, string, error) {
 
 	// check in map
 	if subAddr, exists := subnetMap[subnet]; exists {
-		return subAddr.AsSlice(), nil
+		return subAddr.AsSlice(), subnet, nil
 	}
 
 	// try to parse directly
 	subIP := net.ParseIP(subnet)
 	if subIP == nil {
-		return nil, fmt.Errorf("Could not parse IP: %s", subnet)
+		return nil, "", fmt.Errorf("Could not parse IP: %s", subnet)
 	}
-	return subIP, nil
+	return subIP, "passed ip", nil
 }
 
-func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) {
+// namemaps holds maps of <ip> -> name for nameservers and subnets
+// this makes it nicer to print
+type nameMaps struct {
+	NameserverNames map[string]string
+	SubnetNames     map[string]string
+}
+
+func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMaps, error) {
 
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
@@ -42,25 +49,23 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) 
 	for _, rtypeStr := range rtypeStrs {
 		rtype, ok := dns.StringToType[rtypeStr]
 		if !ok {
-			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+			return nil, nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
 		}
 		rtypes = append(rtypes, rtype)
 	}
 
 	// subnets
 	var subnets []net.IP
+	subnetNames := make(map[string]string)
 
-	var subnetMap map[string]netip.Addr = nil
-	if sm, exists := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr); exists {
-		subnetMap = sm
-	}
-
+	subnetMap, _ := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr)
 	subnetStrs, _ := cmdCtx.Flags["--subnet"].([]string)
 
 	for _, subnetStr := range subnetStrs {
-		subnetIP, err := getSubnet(subnetMap, subnetStr)
+		subnetIP, name, err := getSubnet(subnetMap, subnetStr)
+		subnetNames[subnetIP.String()] = name
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		subnets = append(subnets, subnetIP)
 	}
@@ -72,11 +77,9 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) 
 
 	// nameservers
 	var nameservers []string
+	nameserverNames := make(map[string]string)
 
-	var nameserverMap map[string]netip.AddrPort = nil
-	if nsm, exists := cmdCtx.Flags["--ns-map"].(map[string]netip.AddrPort); exists {
-		nameserverMap = nsm
-	}
+	nameserverMap, _ := cmdCtx.Flags["--ns-map"].(map[string]netip.AddrPort)
 
 	// These might be names Or IP:Port, so let's not commit to this slice
 	nameserverStrs := cmdCtx.Flags["--ns"].([]string)
@@ -85,13 +88,15 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) 
 		// check in map
 		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
 			nameservers = append(nameservers, nsAddrPort.String())
+			nameserverNames[nsAddrPort.String()] = nameserverStr
 		} else {
 			// try to parse directly
 			_, err := netip.ParseAddrPort(nameserverStr)
 			if err != nil {
-				return nil, fmt.Errorf("could not parse --ns: %s : %w", nameserverStr, err)
+				return nil, nil, fmt.Errorf("could not parse --ns: %s : %w", nameserverStr, err)
 			}
 			nameservers = append(nameservers, nameserverStr)
+			nameserverNames[nameserverStr] = "passed ip:port"
 		}
 	}
 
@@ -99,8 +104,8 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) 
 
 	for _, fqdn := range fqdns {
 		for _, rtype := range rtypes {
-			for _, nameserver := range nameservers {
-				for _, subnet := range subnets {
+			for _, subnet := range subnets {
+				for _, nameserver := range nameservers {
 					digRepeatParamsSlice = append(digRepeatParamsSlice, digRepeatParams{
 						DigOneParams: digOneParams{
 							FQDN:             fqdn,
@@ -115,18 +120,33 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, error) 
 			}
 		}
 	}
-	return digRepeatParamsSlice, nil
+	nameMaps := nameMaps{
+		NameserverNames: nameserverNames,
+		SubnetNames:     subnetNames,
+	}
+	return digRepeatParamsSlice, &nameMaps, nil
 }
 
-func printDigRepeat(t table.Writer, p digRepeatParams, r digRepeatResult) {
+func printDigRepeat(t table.Writer, names nameMaps, p digRepeatParams, r digRepeatResult) {
+
+	fmtSubnet := func(subnet net.IP) string {
+		subnetStr := subnet.String()
+		name := names.SubnetNames[subnetStr]
+		return "# " + name + "\n" + subnet.String()
+	}
+
+	fmtNS := func(ns string) string {
+		name := names.NameserverNames[ns]
+		return "# " + name + "\n" + ns
+	}
 
 	// answers
 	for _, ans := range r.Answers {
 		t.AppendRow(table.Row{
 			p.DigOneParams.FQDN,
 			dns.TypeToString[p.DigOneParams.Rtype],
-			p.DigOneParams.NameserverIPPort,
-			p.DigOneParams.SubnetIP.String(),
+			fmtSubnet(p.DigOneParams.SubnetIP),
+			fmtNS(p.DigOneParams.NameserverIPPort),
 			strings.Join(ans.StringSlice, "\n"),
 			ans.Count,
 		})
@@ -136,8 +156,8 @@ func printDigRepeat(t table.Writer, p digRepeatParams, r digRepeatResult) {
 		t.AppendRow(table.Row{
 			p.DigOneParams.FQDN,
 			dns.TypeToString[p.DigOneParams.Rtype],
-			p.DigOneParams.NameserverIPPort,
-			p.DigOneParams.SubnetIP.String(),
+			fmtSubnet(p.DigOneParams.SubnetIP),
+			fmtNS(p.DigOneParams.NameserverIPPort),
 			err.String,
 			err.Count,
 		})
@@ -149,7 +169,7 @@ func printDigRepeat(t table.Writer, p digRepeatParams, r digRepeatResult) {
 
 func runDig(cmdCtx command.Context) error {
 
-	ps, err := cmdCtxToDigRepeatParams(cmdCtx)
+	ps, names, err := cmdCtxToDigRepeatParams(cmdCtx)
 	if err != nil {
 		return err
 	}
@@ -159,10 +179,16 @@ func runDig(cmdCtx command.Context) error {
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"FQDN", "Rtype", "Nameserver", "Subnet", "Ans/Err", "Count"})
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 1, AutoMerge: true},
+		{Number: 2, AutoMerge: true},
+		{Number: 3, AutoMerge: true},
+		{Number: 4, AutoMerge: true},
+	})
+	t.AppendHeader(table.Row{"FQDN", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
 
 	for i := 0; i < len(ps); i++ {
-		printDigRepeat(t, ps[i], results[i])
+		printDigRepeat(t, *names, ps[i], results[i])
 	}
 
 	t.Render()
