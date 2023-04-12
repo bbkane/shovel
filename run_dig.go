@@ -130,6 +130,9 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 func printDigRepeat(t table.Writer, names nameMaps, p digRepeatParams, r digRepeatResult) {
 
 	fmtSubnet := func(subnet net.IP) string {
+		if subnet == nil {
+			return ""
+		}
 		subnetStr := subnet.String()
 		name := names.SubnetNames[subnetStr]
 		return "# " + name + "\n" + subnet.String()
