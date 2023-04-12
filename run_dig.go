@@ -182,12 +182,20 @@ func runDig(cmdCtx command.Context) error {
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)
 	t.SetOutputMirror(os.Stdout)
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{Number: 1, AutoMerge: true},
-		{Number: 2, AutoMerge: true},
-		{Number: 3, AutoMerge: true},
-		{Number: 4, AutoMerge: true},
-	})
+
+	columnConfigs := []table.ColumnConfig{
+		{Number: 1, AutoMerge: true}, // FQDN
+		{Number: 2, AutoMerge: true}, // Rtype
+		{Number: 3, AutoMerge: true}, // Subnet
+		{Number: 4, AutoMerge: true}, // Nameserver
+	}
+	// due to the way parsing works, if the first subnet is nil,
+	// we can assume the rest are too.
+	if len(ps) > 0 && ps[0].DigOneParams.SubnetIP == nil {
+		columnConfigs[2].Hidden = true
+	}
+	t.SetColumnConfigs(columnConfigs)
+
 	t.AppendHeader(table.Row{"FQDN", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
 
 	for i := 0; i < len(ps); i++ {
