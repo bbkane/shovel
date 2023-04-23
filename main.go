@@ -16,10 +16,11 @@ import (
 
 var version string
 
-func digCmd() command.Command {
+func digCmd(digFooter string) command.Command {
 	return command.New(
 		"Query DNS and count results",
 		runDig,
+		command.Footer(digFooter),
 		command.Flag(
 			"--count",
 			"Number of times to dig",
@@ -88,14 +89,19 @@ func digCmd() command.Command {
 }
 
 func buildApp() warg.App {
+	digFooter := `Homepage: https://github.com/bbkane/shovel
+Examples: https://github.com/bbkane/shovel/blob/master/examples.md
+`
+
 	app := warg.New(
 		"shovel",
 		section.New(
 			"Query DNS and count results",
 			section.ExistingCommand(
 				"dig",
-				digCmd(),
+				digCmd(digFooter),
 			),
+			section.Footer(digFooter),
 		),
 		warg.AddColorFlag(),
 		warg.AddVersionCommand(version),

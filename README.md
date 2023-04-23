@@ -6,6 +6,8 @@ Pass multiple FQDNs, nameservers, record types, and client subnets, either via c
 
 ## Use
 
+Also see [examples.md](./examples.md)
+
 ### With different client subnets
 
 ![./demo.gif](./demo.gif)
@@ -31,30 +33,6 @@ $ shovel dig --fqdn linkedin.com --rtype A --rtype AAAA
 │              │       │ # dyn            │ 2620:1ec:21::14 │    10 │
 │              │       │ 108.59.161.43:53 │                 │       │
 ╰──────────────┴───────┴──────────────────┴─────────────────┴───────╯
-```
-
-### Example config
-
-Use `shovel dig -h` to see all possible config paths/flags:
-
-```yaml
-# ~/.config/shovel.yaml
-dig:
-  count: 10
-  nameservers:
-  - ns1
-  - dyn
-  # - google
-  nameserver-map:
-    ns1: 198.51.45.9:53
-    dyn: 108.59.161.43:53
-    google: 8.8.8.8:53
-  # subnets:
-  # - china
-  # - usa
-  subnet-map:
-    china: 101.251.8.0
-    usa: 100.43.128.0
 ```
 
 ## Install

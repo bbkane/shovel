@@ -10,8 +10,8 @@ Set PlaybackSpeed 0.5
 Set TypingSpeed 75ms
 
 Set FontSize 22
-Set Height 800
-Set Width 1680
+Set Height 1000
+Set Width 1700
 Set Padding 50
 
 # https://github.com/charmbracelet/vhs/issues/39#issuecomment-1296334921
