@@ -95,24 +95,28 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 	var nameservers []string
 	nameserverNames := make(map[string]string)
 
-	nameserverMap, _ := cmdCtx.Flags["--ns-map"].(map[string]netip.AddrPort)
+	// NOTE: if the wrong types are asserted, the resulting map is nil...
+	// It would be nice if Go was kind enough to panic...
+	nameserverMap, _ := cmdCtx.Flags["--ns-map"].(map[string]string)
 
-	// These might be names Or IP:Port, so let's not commit to this slice
+	// These might be names Or IP:Port, so let's not use this slice directly
 	nameserverStrs := cmdCtx.Flags["--ns"].([]string)
 
 	for _, nameserverStr := range nameserverStrs {
 		// check in map
 		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
-			nameservers = append(nameservers, nsAddrPort.String())
-			nameserverNames[nsAddrPort.String()] = nameserverStr
+			nameservers = append(nameservers, nsAddrPort)
+			nameserverNames[nsAddrPort] = nameserverStr
 		} else {
-			err := validateNameserverStr(nameserverStr)
-			if err != nil {
-				return nil, nil, fmt.Errorf("error in --ns flag: %s: %w", nameserverStr, err)
-			}
-
+			// use directly
 			nameservers = append(nameservers, nameserverStr)
 			nameserverNames[nameserverStr] = "passed ns:port"
+		}
+	}
+	for _, nameserver := range nameservers {
+		err := validateNameserverStr(nameserver)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error in nameserver: %s: %w", nameserver, err)
 		}
 	}
 

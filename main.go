@@ -58,8 +58,8 @@ func digCmd() command.Command {
 		),
 		command.Flag(
 			"--ns-map",
-			"Map of name to nameserver IP. Can then use names as arguments to --ns",
-			dict.AddrPort(),
+			"Map of name to nameserver IP:port. Can then use names as arguments to --ns",
+			dict.String(),
 			flag.ConfigPath("dig.nameserver-map"),
 		),
 		command.Flag(
