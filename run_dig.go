@@ -77,6 +77,14 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 	subnetMap, _ := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr)
 	subnetStrs, _ := cmdCtx.Flags["--subnet"].([]string)
 
+	// if '--subnet all' is the only thing passed, add all subnets from the map
+	if len(subnetStrs) == 1 && subnetStrs[0] == "all" && len(subnetMap) > 0 {
+		subnetStrs = []string{}
+		for key := range subnetMap {
+			subnetStrs = append(subnetStrs, key)
+		}
+	}
+
 	for _, subnetStr := range subnetStrs {
 		subnetIP, name, err := getSubnet(subnetMap, subnetStr)
 		subnetNames[subnetIP.String()] = name
@@ -102,6 +110,14 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 	// These might be names Or IP:Port, so let's not use this slice directly
 	nameserverStrs := cmdCtx.Flags["--ns"].([]string)
 
+	// if --ns all is the only thing passed, add all nameservers from the map
+	if len(nameserverStrs) == 1 && nameserverStrs[0] == "all" && len(nameserverMap) > 0 {
+		nameserverStrs = []string{}
+		for key := range nameserverMap {
+			nameserverStrs = append(nameserverStrs, key)
+		}
+	}
+
 	for _, nameserverStr := range nameserverStrs {
 		// check in map
 		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
@@ -118,6 +134,10 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 		if err != nil {
 			return nil, nil, fmt.Errorf("error in nameserver: %s: %w", nameserver, err)
 		}
+	}
+
+	if len(nameservers) == 0 {
+		return nil, nil, errors.New("no nameservers passed")
 	}
 
 	digRepeatParamsSlice := []digRepeatParams{}

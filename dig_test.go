@@ -193,6 +193,34 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 			expectedErr:   false,
 			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{"3.4.5.0": "mysubnet"}},
 		},
+		{
+			name: "subnetAll",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "1.2.3.4:53",
+				// no --ns-map
+				"--subnet", "all",
+				"--subnet-map", "subnetName=1.1.1.0",
+				"--timeout", "2s",
+			},
+			expectedParams: []digRepeatParams{
+				{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "1.2.3.4:53",
+						SubnetIP:         net.ParseIP("1.1.1.0"),
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
+				},
+			},
+			expectedErr:   false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "passed ns:port"}, SubnetNames: map[string]string{"1.1.1.0": "subnetName"}},
+		},
 		// --ns tests!
 		{
 			name: "nsPassedAsArg",
@@ -247,6 +275,34 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
 				"--ns", "nsFromMap",
+				"--ns-map", "nsFromMap=1.2.3.4:53",
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: []digRepeatParams{
+				{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "1.2.3.4:53",
+						SubnetIP:         nil,
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
+				},
+			},
+			expectedErr:   false,
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"}, SubnetNames: map[string]string{}},
+		},
+		{
+			name: "nsAll",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "all",
 				"--ns-map", "nsFromMap=1.2.3.4:53",
 				// no --subnet
 				// no --subnet-map

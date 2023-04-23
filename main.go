@@ -39,7 +39,7 @@ func digCmd() command.Command {
 		),
 		command.Flag(
 			"--rtype",
-			"Record type",
+			"Record types",
 			slice.String(
 				slice.Default([]string{"A"}),
 				slice.Choices("A", "AAAA", "CNAME"),
@@ -50,7 +50,7 @@ func digCmd() command.Command {
 		),
 		command.Flag(
 			"--ns",
-			"Nameserver IP + port to query. Example: 198.51.45.9:53",
+			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53 . Set to 'all' to use everything in --ns-map",
 			slice.String(),
 			flag.ConfigPath("dig.nameservers"),
 			flag.Required(),
@@ -64,7 +64,7 @@ func digCmd() command.Command {
 		),
 		command.Flag(
 			"--subnet",
-			"Optional client subnet. 101.251.8.0 for China for example",
+			"Optional client subnet. Example: 101.251.8.0 for China. Set to 'all' to use everything in --subnet-map",
 			slice.String(),
 			flag.ConfigPath("dig.subnets"),
 			flag.Alias("-s"),
