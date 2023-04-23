@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +36,20 @@ func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, string, 
 type nameMaps struct {
 	NameserverNames map[string]string
 	SubnetNames     map[string]string
+}
+
+func validateNameserverStr(nameserverStr string) error {
+	// ensure it ends in a port.
+	_, after, found := strings.Cut(nameserverStr, ":")
+	nsErr := errors.New("passed nameserver must end in :<portnumber>")
+	if !found {
+		return nsErr
+	}
+	_, err := strconv.Atoi(after)
+	if err != nil {
+		return nsErr
+	}
+	return nil
 }
 
 func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMaps, error) {
@@ -90,13 +106,13 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 			nameservers = append(nameservers, nsAddrPort.String())
 			nameserverNames[nsAddrPort.String()] = nameserverStr
 		} else {
-			// try to parse directly
-			_, err := netip.ParseAddrPort(nameserverStr)
+			err := validateNameserverStr(nameserverStr)
 			if err != nil {
-				return nil, nil, fmt.Errorf("could not parse --ns: %s : %w", nameserverStr, err)
+				return nil, nil, fmt.Errorf("error in --ns flag: %s: %w", nameserverStr, err)
 			}
+
 			nameservers = append(nameservers, nameserverStr)
-			nameserverNames[nameserverStr] = "passed ip:port"
+			nameserverNames[nameserverStr] = "passed ns:port"
 		}
 	}
 

@@ -51,6 +51,20 @@ func Test_digOne(t *testing.T) {
 			expected:    []string{"13.107.42.14"},
 			expectedErr: true,
 		},
+		{
+			// Google nameserver doesn't work from China
+			name: "nsName",
+			p: digOneParams{
+				FQDN:  "linkedin.com",
+				Rtype: dns.TypeA,
+				// This can end in '.' or not, it's fine!
+				NameserverIPPort: "dns1.p09.nsone.net:53",
+				SubnetIP:         nil,
+				Timeout:          2 * time.Second,
+			},
+			expected:    []string{"13.107.42.14"},
+			expectedErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -103,7 +117,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 					Count: 1,
 				},
 			},
-			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{}},
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{}},
 			expectedErr:   false,
 		},
 		{
@@ -132,7 +146,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				},
 			},
 			expectedErr:   false,
-			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{"1.2.3.0": "passed ip"}},
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{"1.2.3.0": "passed ip"}},
 		},
 		{
 			name: "badSubnetPassedAsArg",
@@ -177,7 +191,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				},
 			},
 			expectedErr:   false,
-			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{"3.4.5.0": "mysubnet"}},
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{"3.4.5.0": "mysubnet"}},
 		},
 		// --ns tests!
 		{
@@ -206,7 +220,7 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 				},
 			},
 			expectedErr:   false,
-			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ip:port"}, SubnetNames: map[string]string{}},
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{}},
 		},
 		{
 			name: "badNSPassedAsArg",
@@ -252,6 +266,51 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 			},
 			expectedErr:   false,
 			expectedNames: &nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"}, SubnetNames: map[string]string{}},
+		},
+		{
+			name: "namedNameserver",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "dns1.p09.nsone.net.:53",
+				// no --ns-map
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: []digRepeatParams{
+				{
+					DigOneParams: digOneParams{
+						FQDN:             "linkedin.com",
+						Rtype:            dns.TypeA,
+						NameserverIPPort: "dns1.p09.nsone.net.:53",
+						SubnetIP:         nil,
+						Timeout:          2 * time.Second,
+					},
+					Count: 1,
+				},
+			},
+			expectedNames: &nameMaps{NameserverNames: map[string]string{"dns1.p09.nsone.net.:53": "passed ns:port"}, SubnetNames: map[string]string{}},
+			expectedErr:   false,
+		},
+		{
+			name: "namedNameserverErr",
+			args: []string{
+				"shovel", "dig",
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--rtype", "A",
+				"--ns", "dns1.p09.nsone.net.53",
+				// no --ns-map
+				// no --subnet
+				// no --subnet-map
+				"--timeout", "2s",
+			},
+			expectedParams: nil,
+			expectedNames:  nil,
+			expectedErr:    true,
 		},
 	}
 	for _, tt := range tests {

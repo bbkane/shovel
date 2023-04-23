@@ -54,6 +54,7 @@ func digCmd() command.Command {
 			slice.String(),
 			flag.ConfigPath("dig.nameservers"),
 			flag.Required(),
+			flag.Alias("-n"),
 		),
 		command.Flag(
 			"--ns-map",
