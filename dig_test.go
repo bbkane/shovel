@@ -132,7 +132,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{}},
+				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
+				SubnetNames:     map[string]string{},
 			},
 			expectedErr: false,
 		},
@@ -163,7 +164,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{"1.2.3.0": "passed ip"}},
+				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
+				SubnetNames:     map[string]string{"1.2.3.0": "passed ip"},
 			},
 		},
 		{
@@ -209,7 +211,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{"3.4.5.0": "mysubnet"}},
+				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
+				SubnetNames:     map[string]string{"3.4.5.0": "mysubnet"},
 			},
 		},
 		{
@@ -239,7 +242,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "passed ns:port"}, SubnetNames: map[string]string{"1.1.1.0": "subnetName"}},
+				NameserverNames: map[string]string{"1.2.3.4:53": "passed ns:port"},
+				SubnetNames:     map[string]string{"1.1.1.0": "subnetName"},
 			},
 		},
 		// --ns tests!
@@ -270,7 +274,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"}, SubnetNames: map[string]string{}},
+				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
+				SubnetNames:     map[string]string{},
 			},
 		},
 		{
@@ -315,7 +320,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"}, SubnetNames: map[string]string{}},
+				NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
+				SubnetNames:     map[string]string{},
 			},
 		},
 		{
@@ -345,7 +351,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"}, SubnetNames: map[string]string{}},
+				NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
+				SubnetNames:     map[string]string{},
 			},
 		},
 		{
@@ -375,7 +382,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 						Count: 1,
 					},
 				},
-				NameMaps: nameMaps{NameserverNames: map[string]string{"dns1.p09.nsone.net.:53": "passed ns:port"}, SubnetNames: map[string]string{}},
+				NameserverNames: map[string]string{"dns1.p09.nsone.net.:53": "passed ns:port"},
+				SubnetNames:     map[string]string{},
 			},
 		},
 		{
@@ -460,6 +468,36 @@ func Test_digVaried(t *testing.T) {
 						{
 							StringSlice: []string{"www.example.com"},
 							Count:       1,
+						},
+					},
+					Errors: nil,
+				},
+			},
+		},
+		{
+			name: "two",
+			params: []digRepeatParams{
+				{
+					DigOneParams: emptyDigOneparams(),
+					Count:        2,
+				},
+			},
+			dig: digOneFuncMock([]digOneReturns{
+				{
+					Answers: []string{"www.example.com"},
+					Err:     nil,
+				},
+				{
+					Answers: []string{"www.example.com"},
+					Err:     nil,
+				},
+			}),
+			expected: []digRepeatResult{
+				{
+					Answers: []stringSliceCount{
+						{
+							StringSlice: []string{"www.example.com"},
+							Count:       2,
 						},
 					},
 					Errors: nil,

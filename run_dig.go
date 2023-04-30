@@ -31,13 +31,6 @@ func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, string, 
 	return subIP, "passed ip", nil
 }
 
-// namemaps holds maps of <ip> -> name for nameservers and subnets
-// this makes it nicer to print
-type nameMaps struct {
-	NameserverNames map[string]string
-	SubnetNames     map[string]string
-}
-
 func validateNameserverStr(nameserverStr string) error {
 	// ensure it ends in a port.
 	_, after, found := strings.Cut(nameserverStr, ":")
@@ -54,7 +47,8 @@ func validateNameserverStr(nameserverStr string) error {
 
 type parsedCmdCtx struct {
 	DigRepeatParams []digRepeatParams
-	NameMaps        nameMaps
+	NameserverNames map[string]string
+	SubnetNames     map[string]string
 }
 
 func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
@@ -165,29 +159,27 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 			}
 		}
 	}
-	nameMaps := nameMaps{
-		NameserverNames: nameserverNames,
-		SubnetNames:     subnetNames,
-	}
+
 	return &parsedCmdCtx{
 		DigRepeatParams: digRepeatParamsSlice,
-		NameMaps:        nameMaps,
+		NameserverNames: nameserverNames,
+		SubnetNames:     subnetNames,
 	}, nil
 }
 
-func printDigRepeat(t table.Writer, names nameMaps, p digRepeatParams, r digRepeatResult) {
+func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p digRepeatParams, r digRepeatResult) {
 
 	fmtSubnet := func(subnet net.IP) string {
 		if subnet == nil {
 			return ""
 		}
 		subnetStr := subnet.String()
-		name := names.SubnetNames[subnetStr]
+		name := parsed.SubnetNames[subnetStr]
 		return "# " + name + "\n" + subnet.String()
 	}
 
 	fmtNS := func(ns string) string {
-		name := names.NameserverNames[ns]
+		name := parsed.NameserverNames[ns]
 		return "# " + name + "\n" + ns
 	}
 
@@ -247,7 +239,7 @@ func runDig(cmdCtx command.Context) error {
 	t.AppendHeader(table.Row{"FQDN", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
 
 	for i := 0; i < len(parsed.DigRepeatParams); i++ {
-		printDigRepeat(t, parsed.NameMaps, parsed.DigRepeatParams[i], results[i])
+		printDigRepeat(t, *parsed, parsed.DigRepeatParams[i], results[i])
 	}
 
 	t.Render()
