@@ -22,12 +22,14 @@ func Test_digOne(t *testing.T) {
 
 	tests := []struct {
 		name        string
+		dig         digOneFunc
 		p           digOneParams
 		expected    []string
 		expectedErr bool
 	}{
 		{
 			name: "linkedinNoSubnet",
+			dig:  digOne,
 			p: digOneParams{
 				FQDN:             "linkedin.com",
 				Rtype:            dns.TypeA,
@@ -41,6 +43,7 @@ func Test_digOne(t *testing.T) {
 		{
 			// Google nameserver doesn't work from China
 			name: "linkedinChinaSubnet",
+			dig:  digOne,
 			p: digOneParams{
 				FQDN:             "linkedin.com",
 				Rtype:            dns.TypeA,
@@ -54,6 +57,7 @@ func Test_digOne(t *testing.T) {
 		{
 			// Google nameserver doesn't work from China
 			name: "nsName",
+			dig:  digOne,
 			p: digOneParams{
 				FQDN:  "linkedin.com",
 				Rtype: dns.TypeA,
@@ -65,10 +69,22 @@ func Test_digOne(t *testing.T) {
 			expected:    []string{"13.107.42.14"},
 			expectedErr: false,
 		},
+		{
+			name: "mock",
+			dig: digOneFuncMock([]digOneReturns{
+				{
+					Answers: []string{"hi"},
+					Err:     nil,
+				},
+			}),
+			p:           emptyDigOneparams(),
+			expected:    []string{"hi"},
+			expectedErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, actualErr := digOne(tt.p)
+			actual, actualErr := tt.dig(tt.p)
 
 			if tt.expectedErr {
 				require.NotNil(t, actualErr)
@@ -83,7 +99,7 @@ func Test_digOne(t *testing.T) {
 	}
 }
 
-func Test_cmdCtxToDigOneparams(t *testing.T) {
+func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 	tests := []struct {
 		name           string
 		args           []string
@@ -405,6 +421,50 @@ func Test_cmdCtxToDigOneparams(t *testing.T) {
 
 			require.Equal(t, tt.expectedParams, actualParams)
 
+		})
+	}
+}
+
+func Test_digVaried(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		params   []digRepeatParams
+		dig      digOneFunc
+		expected []digRepeatResult
+	}{
+		{
+			name: "simple",
+			params: []digRepeatParams{
+				{
+					DigOneParams: emptyDigOneparams(),
+					Count:        1,
+				},
+			},
+			dig: digOneFuncMock([]digOneReturns{
+				{
+					Answers: []string{"www.example.com"},
+					Err:     nil,
+				},
+			}),
+			expected: []digRepeatResult{
+				{
+					Answers: []stringSliceCount{
+						{
+							StringSlice: []string{"www.example.com"},
+							Count:       1,
+						},
+					},
+					Errors: nil,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			actual := digVaried(tt.params, tt.dig)
+			require.Equal(t, tt.expected, actual)
 		})
 	}
 }

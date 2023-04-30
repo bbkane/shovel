@@ -19,6 +19,35 @@ type digOneParams struct {
 	Timeout          time.Duration
 }
 
+func emptyDigOneparams() digOneParams {
+	return digOneParams{
+		FQDN:             "",
+		Rtype:            0,
+		NameserverIPPort: "",
+		SubnetIP:         nil,
+		Timeout:          0,
+	}
+}
+
+type digOneFunc func(p digOneParams) ([]string, error)
+
+type digOneReturns struct {
+	Answers []string
+	Err     error
+}
+
+func digOneFuncMock(rets []digOneReturns) digOneFunc {
+	var i int
+	return func(p digOneParams) ([]string, error) {
+		if i >= len(rets) {
+			panic("Ran out of returns!")
+		}
+		ret := rets[i]
+		i++
+		return ret.Answers, ret.Err
+	}
+}
+
 // digOne an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
 // Returns answers sorted
 func digOne(p digOneParams) ([]string, error) {
@@ -99,12 +128,12 @@ type digRepeatResult struct {
 	Errors  []stringCount
 }
 
-func digRepeat(p digRepeatParams) digRepeatResult {
+func digRepeat(p digRepeatParams, dig digOneFunc) digRepeatResult {
 	answerCounter := newStringSliceCounter()
 	errorCounter := newStringCounter()
 
 	for i := 0; i < p.Count; i++ {
-		answer, err := digOne(p.DigOneParams)
+		answer, err := dig(p.DigOneParams)
 		if err != nil {
 			errorCounter.Add(err.Error())
 		} else {
@@ -117,8 +146,8 @@ func digRepeat(p digRepeatParams) digRepeatResult {
 	}
 }
 
-func digVaried(ps []digRepeatParams) []digRepeatResult {
-	return iter.Map(ps, func(p *digRepeatParams) digRepeatResult {
-		return digRepeat(*p)
+func digVaried(params []digRepeatParams, dig digOneFunc) []digRepeatResult {
+	return iter.Map(params, func(p *digRepeatParams) digRepeatResult {
+		return digRepeat(*p, dig)
 	})
 }
