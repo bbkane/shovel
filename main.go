@@ -85,6 +85,14 @@ func digCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.ConfigPath("dig.timeout"),
 		),
+		command.Flag(
+			"--mock-dig-func",
+			"Flag to mock dig func. Used only for testing",
+			scalar.String(
+				scalar.Default("none"),
+			),
+			flag.Required(),
+		),
 	)
 }
 

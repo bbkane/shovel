@@ -52,7 +52,12 @@ func validateNameserverStr(nameserverStr string) error {
 	return nil
 }
 
-func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMaps, error) {
+type parsedCmdCtx struct {
+	DigRepeatParams []digRepeatParams
+	NameMaps        nameMaps
+}
+
+func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
@@ -65,7 +70,7 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 	for _, rtypeStr := range rtypeStrs {
 		rtype, ok := dns.StringToType[rtypeStr]
 		if !ok {
-			return nil, nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
 		}
 		rtypes = append(rtypes, rtype)
 	}
@@ -89,7 +94,7 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 		subnetIP, name, err := getSubnet(subnetMap, subnetStr)
 		subnetNames[subnetIP.String()] = name
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		subnets = append(subnets, subnetIP)
 	}
@@ -132,12 +137,12 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 	for _, nameserver := range nameservers {
 		err := validateNameserverStr(nameserver)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error in nameserver: %s: %w", nameserver, err)
+			return nil, fmt.Errorf("error in nameserver: %s: %w", nameserver, err)
 		}
 	}
 
 	if len(nameservers) == 0 {
-		return nil, nil, errors.New("no nameservers passed")
+		return nil, errors.New("no nameservers passed")
 	}
 
 	digRepeatParamsSlice := []digRepeatParams{}
@@ -164,7 +169,10 @@ func cmdCtxToDigRepeatParams(cmdCtx command.Context) ([]digRepeatParams, *nameMa
 		NameserverNames: nameserverNames,
 		SubnetNames:     subnetNames,
 	}
-	return digRepeatParamsSlice, &nameMaps, nil
+	return &parsedCmdCtx{
+		DigRepeatParams: digRepeatParamsSlice,
+		NameMaps:        nameMaps,
+	}, nil
 }
 
 func printDigRepeat(t table.Writer, names nameMaps, p digRepeatParams, r digRepeatResult) {
@@ -212,12 +220,12 @@ func printDigRepeat(t table.Writer, names nameMaps, p digRepeatParams, r digRepe
 
 func runDig(cmdCtx command.Context) error {
 
-	params, names, err := cmdCtxToDigRepeatParams(cmdCtx)
+	parsed, err := parseCmdCtx(cmdCtx)
 	if err != nil {
 		return err
 	}
 
-	results := digVaried(params, digOne)
+	results := digVaried(parsed.DigRepeatParams, digOne)
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)
@@ -231,15 +239,15 @@ func runDig(cmdCtx command.Context) error {
 	}
 	// due to the way parsing works, if the first subnet is nil,
 	// we can assume the rest are too.
-	if len(params) > 0 && params[0].DigOneParams.SubnetIP == nil {
+	if len(parsed.DigRepeatParams) > 0 && parsed.DigRepeatParams[0].DigOneParams.SubnetIP == nil {
 		columnConfigs[2].Hidden = true
 	}
 	t.SetColumnConfigs(columnConfigs)
 
 	t.AppendHeader(table.Row{"FQDN", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
 
-	for i := 0; i < len(params); i++ {
-		printDigRepeat(t, *names, params[i], results[i])
+	for i := 0; i < len(parsed.DigRepeatParams); i++ {
+		printDigRepeat(t, parsed.NameMaps, parsed.DigRepeatParams[i], results[i])
 	}
 
 	t.Render()
