@@ -98,7 +98,7 @@ func Test_digOne(t *testing.T) {
 	}
 }
 
-func Test_cmdCtxToDigRepeatParams(t *testing.T) {
+func Test_parseCmdCtx(t *testing.T) {
 	tests := []struct {
 		name           string
 		args           []string
@@ -134,6 +134,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
 				SubnetNames:     map[string]string{},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 			expectedErr: false,
 		},
@@ -166,6 +168,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
 				SubnetNames:     map[string]string{"1.2.3.0": "passed ip"},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		{
@@ -213,6 +217,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
 				SubnetNames:     map[string]string{"3.4.5.0": "mysubnet"},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		{
@@ -244,6 +250,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"1.2.3.4:53": "passed ns:port"},
 				SubnetNames:     map[string]string{"1.1.1.0": "subnetName"},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		// --ns tests!
@@ -276,6 +284,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
 				SubnetNames:     map[string]string{},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		{
@@ -322,6 +332,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
 				SubnetNames:     map[string]string{},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		{
@@ -353,6 +365,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
 				SubnetNames:     map[string]string{},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		{
@@ -384,6 +398,8 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 				},
 				NameserverNames: map[string]string{"dns1.p09.nsone.net.:53": "passed ns:port"},
 				SubnetNames:     map[string]string{},
+				Dig:             nil,
+				Stdout:          nil,
 			},
 		},
 		{
@@ -416,6 +432,11 @@ func Test_cmdCtxToDigRepeatParams(t *testing.T) {
 			} else {
 				require.Nil(t, actualErr)
 			}
+
+			// Functions can't always compare false, so nil Dig out
+			actualParsed.Dig = nil
+			// I also don't want to mess with os Files
+			actualParsed.Stdout = nil
 
 			// Test subnets individually since they cannot be compared with '=='
 			require.Equal(t, len(tt.expectedParsed.DigRepeatParams), len(actualParsed.DigRepeatParams))
@@ -510,6 +531,35 @@ func Test_digVaried(t *testing.T) {
 
 			actual := digVaried(tt.params, tt.dig)
 			require.Equal(t, tt.expected, actual)
+		})
+	}
+}
+func TestRunHelp(t *testing.T) {
+	updateGolden := os.Getenv("SHOVEL_TEST_UPDATE_GOLDEN") != ""
+	tests := []struct {
+		name   string
+		app    warg.App
+		args   []string
+		lookup warg.LookupFunc
+	}{
+		{
+			name: "simple",
+			app:  buildApp(),
+			args: []string{"shovel", "dig",
+				"--config", "notthere", // Hack so shovel doesn't try to read a config
+				"--count", "1",
+				"--fqdn", "linkedin.com",
+				"--mock-dig-func", "simple", // don't really dig!
+				"--ns", "0.0.0.0:53",
+				"--rtype", "A",
+			},
+			lookup: warg.LookupMap(nil),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			warg.GoldenTest(t, tt.app, tt.args, tt.lookup, updateGolden)
 		})
 	}
 }

@@ -45,10 +45,28 @@ func validateNameserverStr(nameserverStr string) error {
 	return nil
 }
 
+func getDigFunc(name string) digOneFunc {
+	digs := map[string]digOneFunc{
+		"none": digOne,
+		"simple": digOneFuncMock(
+			[]digOneReturns{
+				{Answers: []string{"1.2.3.4"}, Err: nil},
+			},
+		),
+	}
+	dig, exists := digs[name]
+	if !exists {
+		panic("could not find dig func: " + name)
+	}
+	return dig
+}
+
 type parsedCmdCtx struct {
 	DigRepeatParams []digRepeatParams
 	NameserverNames map[string]string
 	SubnetNames     map[string]string
+	Dig             digOneFunc
+	Stdout          *os.File
 }
 
 func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
@@ -68,6 +86,9 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		}
 		rtypes = append(rtypes, rtype)
 	}
+
+	mockDigFuncStr := cmdCtx.Flags["--mock-dig-func"].(string)
+	dig := getDigFunc(mockDigFuncStr)
 
 	// subnets
 	var subnets []net.IP
@@ -164,6 +185,8 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		DigRepeatParams: digRepeatParamsSlice,
 		NameserverNames: nameserverNames,
 		SubnetNames:     subnetNames,
+		Dig:             dig,
+		Stdout:          cmdCtx.Stdout,
 	}, nil
 }
 
@@ -217,11 +240,11 @@ func runDig(cmdCtx command.Context) error {
 		return err
 	}
 
-	results := digVaried(parsed.DigRepeatParams, digOne)
+	results := digVaried(parsed.DigRepeatParams, parsed.Dig)
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)
-	t.SetOutputMirror(os.Stdout)
+	t.SetOutputMirror(parsed.Stdout)
 
 	columnConfigs := []table.ColumnConfig{
 		{Number: 1, AutoMerge: true}, // FQDN
