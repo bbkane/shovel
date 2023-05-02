@@ -25,7 +25,7 @@ func digCmd(digFooter string) command.Command {
 			"--count",
 			"Number of times to dig",
 			scalar.Int(
-				scalar.Default(10),
+				scalar.Default(1),
 			),
 			flag.ConfigPath("dig.count"),
 			flag.Required(),
@@ -43,7 +43,7 @@ func digCmd(digFooter string) command.Command {
 			"Record types",
 			slice.String(
 				slice.Default([]string{"A"}),
-				slice.Choices("A", "AAAA", "CNAME"),
+				slice.Choices("A", "AAAA", "CNAME", "TXT"),
 			),
 			flag.ConfigPath("dig.rtypes"),
 			flag.Required(),
@@ -92,6 +92,16 @@ func digCmd(digFooter string) command.Command {
 				scalar.Default("none"),
 			),
 			flag.Required(),
+		),
+		command.Flag(
+			"--protocol",
+			"Protocol to use when digging",
+			scalar.String(
+				scalar.Choices("udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"),
+				scalar.Default("udp"),
+			),
+			flag.Required(),
+			flag.Alias("-p"),
 		),
 	)
 }

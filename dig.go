@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/miekg/dns"
@@ -17,6 +18,7 @@ type digOneParams struct {
 	NameserverIPPort string
 	SubnetIP         net.IP
 	Timeout          time.Duration
+	Proto            string
 }
 
 func emptyDigOneparams() digOneParams {
@@ -26,6 +28,7 @@ func emptyDigOneparams() digOneParams {
 		NameserverIPPort: "",
 		SubnetIP:         nil,
 		Timeout:          0,
+		Proto:            "",
 	}
 }
 
@@ -86,7 +89,23 @@ func digOne(p digOneParams) ([]string, error) {
 	clientCtx, cancel := context.WithTimeout(context.Background(), p.Timeout)
 	defer cancel()
 
-	in, err := dns.ExchangeContext(clientCtx, m, p.NameserverIPPort)
+	// in, err := dns.ExchangeContext(clientCtx, m, p.NameserverIPPort)
+
+	client := dns.Client{
+		Net:            p.Proto,
+		UDPSize:        0,
+		TLSConfig:      nil,
+		Dialer:         nil,
+		Timeout:        0,
+		DialTimeout:    0,
+		ReadTimeout:    0,
+		WriteTimeout:   0,
+		TsigSecret:     nil,
+		TsigProvider:   nil,
+		SingleInflight: false,
+	}
+	in, _, err := client.ExchangeContext(clientCtx, m, p.NameserverIPPort)
+
 	if err != nil {
 		return nil, fmt.Errorf("exchange err: %w", err)
 	}
@@ -109,6 +128,10 @@ func digOne(p digOneParams) ([]string, error) {
 			answers = append(answers, t.AAAA.String())
 		case *dns.CNAME:
 			answers = append(answers, t.Target)
+		case *dns.TXT:
+			// NOTE: the dns lib has a MUCH fancier private way to do this
+			// Maybe I should copy that :)
+			answers = append(answers, strings.Join(t.Txt, " "))
 		default:
 			return nil, fmt.Errorf("unknown record type: %T", e)
 		}

@@ -75,6 +75,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	count := cmdCtx.Flags["--count"].(int)
 	fqdns := cmdCtx.Flags["--fqdn"].([]string)
 	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
+	proto := cmdCtx.Flags["--protocol"].(string)
 
 	// rtypes
 	rtypeStrs := cmdCtx.Flags["--rtype"].([]string)
@@ -173,6 +174,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 							NameserverIPPort: nameserver,
 							SubnetIP:         subnet,
 							Timeout:          timeout,
+							Proto:            proto,
 						},
 						Count: count,
 					})
