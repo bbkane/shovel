@@ -79,7 +79,7 @@ shovel dig \
     --subnet all
 ```
 
-## Proxy DNS Traffic through a separate server with `sshuttle`
+## Proxy DNS Traffic through a separate server with [`sshuttle`](https://sshuttle.readthedocs.io/en/stable/usage.html)
 
 In one tab:
 ```bash
