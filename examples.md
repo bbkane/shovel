@@ -71,10 +71,24 @@ shovel dig \
 
 ## Use 'all' to pass everything in --ns-map/--subnet-map
 
-```
+```bash
 shovel dig \
     --fqdn www.linkedin.com \
     --rtype CNAME \
     --ns all \
     --subnet all
 ```
+
+## Proxy DNS Traffic through a separate server with `sshuttle`
+
+In one tab:
+```bash
+sshuttle --dns -r bkane@bkane-ld2 --ns-hosts=ns1.p43.dynect.net,dns1.p09.nsone.net,ns1-42.azure-dns.com. 0/0:53 ::/0:53
+```
+
+In another tab:
+
+```bash
+shovel dig -f linkedin.com -r TXT -p udp4
+```
+
