@@ -83,7 +83,7 @@ shovel dig \
 
 In one tab:
 ```bash
-sshuttle --dns -r bkane@bkane-ld2 --ns-hosts=ns1.p43.dynect.net,dns1.p09.nsone.net,ns1-42.azure-dns.com. 0/0:53 ::/0:53
+sshuttle --dns -r username@host --ns-hosts=ns1.p43.dynect.net,dns1.p09.nsone.net,ns1-42.azure-dns.com. 0/0:53 ::/0:53
 ```
 
 In another tab:
