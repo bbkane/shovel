@@ -102,6 +102,7 @@ func digCmd(digFooter string) command.Command {
 			),
 			flag.Required(),
 			flag.Alias("-p"),
+			flag.ConfigPath("dig.protocol"),
 		),
 	)
 }
