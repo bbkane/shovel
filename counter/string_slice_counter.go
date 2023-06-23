@@ -1,4 +1,4 @@
-package main
+package counter
 
 import (
 	"hash/fnv"
@@ -7,19 +7,19 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type stringSliceCounter struct {
+type StringSliceCounter struct {
 	hashToSlice map[uint64][]string
 	hashToCount map[uint64]int
 }
 
-func newStringSliceCounter() stringSliceCounter {
-	return stringSliceCounter{
+func NewStringSliceCounter() StringSliceCounter {
+	return StringSliceCounter{
 		hashToSlice: make(map[uint64][]string),
 		hashToCount: make(map[uint64]int),
 	}
 }
 
-func (c *stringSliceCounter) Add(slice []string) {
+func (c *StringSliceCounter) Add(slice []string) {
 	// https://pkg.go.dev/hash@go1.20.2#example-package-BinaryMarshaler
 	// https://stackoverflow.com/a/72562519/2958070
 
@@ -33,15 +33,15 @@ func (c *stringSliceCounter) Add(slice []string) {
 	c.hashToSlice[hash] = slice // TODO: how expensive is this?
 }
 
-type stringSliceCount struct {
+type StringSliceCount struct {
 	StringSlice []string
 	Count       int
 }
 
-func (c *stringSliceCounter) AsSortedSlice() []stringSliceCount {
-	var ret []stringSliceCount
+func (c *StringSliceCounter) AsSortedSlice() []StringSliceCount {
+	var ret []StringSliceCount
 	for key := range c.hashToCount {
-		ret = append(ret, stringSliceCount{
+		ret = append(ret, StringSliceCount{
 			StringSlice: c.hashToSlice[key],
 			Count:       c.hashToCount[key],
 		})

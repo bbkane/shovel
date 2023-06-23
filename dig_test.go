@@ -8,6 +8,7 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/require"
+	"go.bbkane.com/shovel/counter"
 	"go.bbkane.com/warg"
 	"go.bbkane.com/warg/command"
 )
@@ -496,7 +497,7 @@ func Test_digVaried(t *testing.T) {
 			}),
 			expected: []digRepeatResult{
 				{
-					Answers: []stringSliceCount{
+					Answers: []counter.StringSliceCount{
 						{
 							StringSlice: []string{"www.example.com"},
 							Count:       1,
@@ -526,7 +527,7 @@ func Test_digVaried(t *testing.T) {
 			}),
 			expected: []digRepeatResult{
 				{
-					Answers: []stringSliceCount{
+					Answers: []counter.StringSliceCount{
 						{
 							StringSlice: []string{"www.example.com"},
 							Count:       2,

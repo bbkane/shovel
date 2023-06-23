@@ -1,4 +1,4 @@
-package main
+package counter
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestStringCounter(t *testing.T) {
-	c := newStringCounter()
+	c := NewStringCounter()
 	c.Add("4")
 	c.Add("1")
 	c.Add("2")
@@ -17,7 +17,7 @@ func TestStringCounter(t *testing.T) {
 
 	actual := c.AsSortedSlice()
 
-	expected := []stringCount{
+	expected := []StringCount{
 		{
 			String: "1",
 			Count:  1,

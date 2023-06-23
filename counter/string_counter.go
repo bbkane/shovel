@@ -1,31 +1,31 @@
-package main
+package counter
 
 import "sort"
 
-type stringCounter struct {
+type StringCounter struct {
 	counter map[string]int
 }
 
-func newStringCounter() stringCounter {
-	return stringCounter{
+func NewStringCounter() StringCounter {
+	return StringCounter{
 		counter: make(map[string]int),
 	}
 }
 
-func (c *stringCounter) Add(str string) {
+func (c *StringCounter) Add(str string) {
 	c.counter[str]++
 }
 
-type stringCount struct {
+type StringCount struct {
 	String string
 	Count  int
 }
 
 // AsSortedSlice returns the counter as a slice sorted by name asc, count asc
-func (c *stringCounter) AsSortedSlice() []stringCount {
-	var ret []stringCount
+func (c *StringCounter) AsSortedSlice() []StringCount {
+	var ret []StringCount
 	for key, val := range c.counter {
-		ret = append(ret, stringCount{
+		ret = append(ret, StringCount{
 			String: key,
 			Count:  val,
 		})

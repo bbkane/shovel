@@ -10,6 +10,7 @@ import (
 
 	"github.com/miekg/dns"
 	"github.com/sourcegraph/conc/iter"
+	"go.bbkane.com/shovel/counter"
 )
 
 type digOneParams struct {
@@ -147,13 +148,13 @@ type digRepeatParams struct {
 }
 
 type digRepeatResult struct {
-	Answers []stringSliceCount
-	Errors  []stringCount
+	Answers []counter.StringSliceCount
+	Errors  []counter.StringCount
 }
 
 func digRepeat(p digRepeatParams, dig digOneFunc) digRepeatResult {
-	answerCounter := newStringSliceCounter()
-	errorCounter := newStringCounter()
+	answerCounter := counter.NewStringSliceCounter()
+	errorCounter := counter.NewStringCounter()
 
 	for i := 0; i < p.Count; i++ {
 		answer, err := dig(p.DigOneParams)
