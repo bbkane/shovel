@@ -112,7 +112,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "noSubnet",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -146,7 +146,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "subnetPassedAsArg",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -180,7 +180,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "badSubnetPassedAsArg",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -196,7 +196,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "subnetFromMap",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -230,7 +230,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "subnetAll",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -265,7 +265,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "nsPassedAsArg",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -299,7 +299,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "badNSPassedAsArg",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -314,7 +314,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "nsFromMap",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -348,7 +348,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "nsAll",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -382,7 +382,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "namedNameserver",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -416,7 +416,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		{
 			name: "namedNameserverErr",
 			args: []string{
-				"shovel", "dig",
+				"shovel", "dig", "combine",
 				"--count", "1",
 				"--fqdn", "linkedin.com",
 				"--rtype", "A",
@@ -556,7 +556,7 @@ func TestRunHelp(t *testing.T) {
 		{
 			name: "simple",
 			app:  buildApp(),
-			args: []string{"shovel", "dig",
+			args: []string{"shovel", "dig", "combine",
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "1",
 				"--fqdn", "linkedin.com",
@@ -569,7 +569,7 @@ func TestRunHelp(t *testing.T) {
 		{
 			name: "twocount",
 			app:  buildApp(),
-			args: []string{"shovel", "dig",
+			args: []string{"shovel", "dig", "combine",
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "2",
 				"--fqdn", "linkedin.com",

@@ -16,10 +16,10 @@ import (
 
 var version string
 
-func digCmd(digFooter string) command.Command {
+func digCombineCmd(digFooter string) command.Command {
 	return command.New(
-		"Query DNS and count results",
-		runDig,
+		"Dig combinations of FQDNs/RTypes/Subnets/NSs and summarize results",
+		runDigCombine,
 		command.Footer(digFooter),
 		command.Flag(
 			"--count",
@@ -27,7 +27,7 @@ func digCmd(digFooter string) command.Command {
 			scalar.Int(
 				scalar.Default(1),
 			),
-			flag.ConfigPath("dig.count"),
+			flag.ConfigPath("dig.combine.count"),
 			flag.Required(),
 			flag.Alias("-c"),
 		),
@@ -35,7 +35,7 @@ func digCmd(digFooter string) command.Command {
 			"--fqdn",
 			"FQDNs to dig",
 			slice.String(),
-			flag.ConfigPath("dig.fqdns"),
+			flag.ConfigPath("dig.combine.fqdns"),
 			flag.Required(),
 			flag.Alias("-f"),
 		),
@@ -46,7 +46,7 @@ func digCmd(digFooter string) command.Command {
 				slice.Default([]string{"A"}),
 				slice.Choices("A", "AAAA", "CNAME", "TXT"),
 			),
-			flag.ConfigPath("dig.rtypes"),
+			flag.ConfigPath("dig.combine.rtypes"),
 			flag.Required(),
 			flag.Alias("-r"),
 		),
@@ -54,7 +54,7 @@ func digCmd(digFooter string) command.Command {
 			"--ns",
 			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53 . Set to 'all' to use everything in --ns-map",
 			slice.String(),
-			flag.ConfigPath("dig.nameservers"),
+			flag.ConfigPath("dig.combine.nameservers"),
 			flag.Required(),
 			flag.Alias("-n"),
 		),
@@ -62,20 +62,20 @@ func digCmd(digFooter string) command.Command {
 			"--ns-map",
 			"Map of name to nameserver IP:port. Can then use names as arguments to --ns",
 			dict.String(),
-			flag.ConfigPath("dig.nameserver-map"),
+			flag.ConfigPath("dig.combine.nameserver-map"),
 		),
 		command.Flag(
 			"--subnet",
 			"Optional client subnet. Example: 101.251.8.0 for China. Set to 'all' to use everything in --subnet-map",
 			slice.String(),
-			flag.ConfigPath("dig.subnets"),
+			flag.ConfigPath("dig.combine.subnets"),
 			flag.Alias("-s"),
 		),
 		command.Flag(
 			"--subnet-map",
 			"Map of name to subnet. Can then use names as arguments to --subnet",
 			dict.Addr(),
-			flag.ConfigPath("dig.subnet-map"),
+			flag.ConfigPath("dig.combine.subnet-map"),
 		),
 		command.Flag(
 			"--timeout",
@@ -84,7 +84,7 @@ func digCmd(digFooter string) command.Command {
 				scalar.Default(2*time.Second),
 			),
 			flag.Required(),
-			flag.ConfigPath("dig.timeout"),
+			flag.ConfigPath("dig.combine.timeout"),
 		),
 		command.Flag(
 			"--mock-dig-func",
@@ -103,10 +103,12 @@ func digCmd(digFooter string) command.Command {
 			),
 			flag.Required(),
 			flag.Alias("-p"),
-			flag.ConfigPath("dig.protocol"),
+			flag.ConfigPath("dig.combine.protocol"),
 		),
 	)
 }
+
+// func digListCmd()
 
 func buildApp() warg.App {
 	digFooter := `Homepage: https://github.com/bbkane/shovel
@@ -117,9 +119,13 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 		"shovel",
 		section.New(
 			"Query DNS and count results",
-			section.ExistingCommand(
+			section.Section(
 				"dig",
-				digCmd(digFooter),
+				"Dig in different ways",
+				section.ExistingCommand(
+					"combine",
+					digCombineCmd(digFooter),
+				),
 			),
 			section.Footer(digFooter),
 		),

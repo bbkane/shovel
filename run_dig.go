@@ -241,7 +241,7 @@ func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p digRepeatParams, r di
 
 }
 
-func runDig(cmdCtx command.Context) error {
+func runDigCombine(cmdCtx command.Context) error {
 
 	parsed, err := parseCmdCtx(cmdCtx)
 	if err != nil {
