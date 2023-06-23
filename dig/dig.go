@@ -1,4 +1,4 @@
-package main
+package dig
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"go.bbkane.com/shovel/counter"
 )
 
-type digOneParams struct {
+type DigOneParams struct {
 	FQDN             string
 	Rtype            uint16
 	NameserverIPPort string
@@ -22,8 +22,8 @@ type digOneParams struct {
 	Proto            string
 }
 
-func emptyDigOneparams() digOneParams {
-	return digOneParams{
+func EmptyDigOneparams() DigOneParams {
+	return DigOneParams{
 		FQDN:             "",
 		Rtype:            0,
 		NameserverIPPort: "",
@@ -33,16 +33,16 @@ func emptyDigOneparams() digOneParams {
 	}
 }
 
-type digOneFunc func(p digOneParams) ([]string, error)
+type DigOneFunc func(p DigOneParams) ([]string, error)
 
-type digOneReturns struct {
+type DigOneResult struct {
 	Answers []string
 	Err     error
 }
 
-func digOneFuncMock(rets []digOneReturns) digOneFunc {
+func DigOneFuncMock(rets []DigOneResult) DigOneFunc {
 	var i int
-	return func(p digOneParams) ([]string, error) {
+	return func(p DigOneParams) ([]string, error) {
 		if i >= len(rets) {
 			panic("Ran out of returns!")
 		}
@@ -52,9 +52,9 @@ func digOneFuncMock(rets []digOneReturns) digOneFunc {
 	}
 }
 
-// digOne an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
+// DigOne an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
 // Returns answers sorted
-func digOne(p digOneParams) ([]string, error) {
+func DigOne(p DigOneParams) ([]string, error) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(p.FQDN), p.Rtype)
 
@@ -142,17 +142,17 @@ func digOne(p digOneParams) ([]string, error) {
 	return answers, nil
 }
 
-type digRepeatParams struct {
-	DigOneParams digOneParams
+type DigRepeatParams struct {
+	DigOneParams DigOneParams
 	Count        int
 }
 
-type digRepeatResult struct {
+type DigRepeatResult struct {
 	Answers []counter.StringSliceCount
 	Errors  []counter.StringCount
 }
 
-func digRepeat(p digRepeatParams, dig digOneFunc) digRepeatResult {
+func DigRepeat(p DigRepeatParams, dig DigOneFunc) DigRepeatResult {
 	answerCounter := counter.NewStringSliceCounter()
 	errorCounter := counter.NewStringCounter()
 
@@ -164,14 +164,14 @@ func digRepeat(p digRepeatParams, dig digOneFunc) digRepeatResult {
 			answerCounter.Add(answer)
 		}
 	}
-	return digRepeatResult{
+	return DigRepeatResult{
 		Answers: answerCounter.AsSortedSlice(),
 		Errors:  errorCounter.AsSortedSlice(),
 	}
 }
 
-func digVaried(params []digRepeatParams, dig digOneFunc) []digRepeatResult {
-	return iter.Map(params, func(p *digRepeatParams) digRepeatResult {
-		return digRepeat(*p, dig)
+func DigList(params []DigRepeatParams, dig DigOneFunc) []DigRepeatResult {
+	return iter.Map(params, func(p *DigRepeatParams) DigRepeatResult {
+		return DigRepeat(*p, dig)
 	})
 }

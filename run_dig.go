@@ -12,6 +12,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/miekg/dns"
+	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/warg/command"
 )
 
@@ -45,16 +46,16 @@ func validateNameserverStr(nameserverStr string) error {
 	return nil
 }
 
-func getDigFunc(name string) digOneFunc {
-	digs := map[string]digOneFunc{
-		"none": digOne,
-		"simple": digOneFuncMock(
-			[]digOneReturns{
+func getDigFunc(name string) dig.DigOneFunc {
+	digs := map[string]dig.DigOneFunc{
+		"none": dig.DigOne,
+		"simple": dig.DigOneFuncMock(
+			[]dig.DigOneResult{
 				{Answers: []string{"1.2.3.4"}, Err: nil},
 			},
 		),
-		"twocount": digOneFuncMock(
-			[]digOneReturns{
+		"twocount": dig.DigOneFuncMock(
+			[]dig.DigOneResult{
 				{Answers: []string{"1.2.3.4"}, Err: nil},
 				{Answers: []string{"1.2.3.4"}, Err: nil},
 			},
@@ -68,10 +69,10 @@ func getDigFunc(name string) digOneFunc {
 }
 
 type parsedCmdCtx struct {
-	DigRepeatParams []digRepeatParams
+	DigRepeatParams []dig.DigRepeatParams
 	NameserverNames map[string]string
 	SubnetNames     map[string]string
-	Dig             digOneFunc
+	Dig             dig.DigOneFunc
 	Stdout          *os.File
 }
 
@@ -95,7 +96,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	}
 
 	mockDigFuncStr := cmdCtx.Flags["--mock-dig-func"].(string)
-	dig := getDigFunc(mockDigFuncStr)
+	digFunc := getDigFunc(mockDigFuncStr)
 
 	// subnets
 	var subnets []net.IP
@@ -167,14 +168,14 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		return nil, errors.New("no nameservers passed")
 	}
 
-	digRepeatParamsSlice := []digRepeatParams{}
+	digRepeatParamsSlice := []dig.DigRepeatParams{}
 
 	for _, fqdn := range fqdns {
 		for _, rtype := range rtypes {
 			for _, subnet := range subnets {
 				for _, nameserver := range nameservers {
-					digRepeatParamsSlice = append(digRepeatParamsSlice, digRepeatParams{
-						DigOneParams: digOneParams{
+					digRepeatParamsSlice = append(digRepeatParamsSlice, dig.DigRepeatParams{
+						DigOneParams: dig.DigOneParams{
 							FQDN:             fqdn,
 							Rtype:            rtype,
 							NameserverIPPort: nameserver,
@@ -193,12 +194,12 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		DigRepeatParams: digRepeatParamsSlice,
 		NameserverNames: nameserverNames,
 		SubnetNames:     subnetNames,
-		Dig:             dig,
+		Dig:             digFunc,
 		Stdout:          cmdCtx.Stdout,
 	}, nil
 }
 
-func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p digRepeatParams, r digRepeatResult) {
+func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p dig.DigRepeatParams, r dig.DigRepeatResult) {
 
 	fmtSubnet := func(subnet net.IP) string {
 		if subnet == nil {
@@ -248,7 +249,7 @@ func runDigCombine(cmdCtx command.Context) error {
 		return err
 	}
 
-	results := digVaried(parsed.DigRepeatParams, parsed.Dig)
+	results := dig.DigList(parsed.DigRepeatParams, parsed.Dig)
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)
