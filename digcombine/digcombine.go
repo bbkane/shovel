@@ -1,4 +1,4 @@
-package main
+package digcombine
 
 import (
 	"errors"
@@ -242,7 +242,7 @@ func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p dig.DigRepeatParams, 
 
 }
 
-func runDigCombine(cmdCtx command.Context) error {
+func Run(cmdCtx command.Context) error {
 
 	parsed, err := parseCmdCtx(cmdCtx)
 	if err != nil {

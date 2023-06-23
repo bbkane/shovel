@@ -1,39 +1,28 @@
-package main
+package digcombine
 
 import (
 	"net"
-	"os"
+	"net/netip"
 	"testing"
 	"time"
 
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/require"
 	"go.bbkane.com/shovel/dig"
-	"go.bbkane.com/warg"
 	"go.bbkane.com/warg/command"
 )
 
 func Test_parseCmdCtx(t *testing.T) {
 	tests := []struct {
 		name           string
-		args           []string
 		cmdCtx         command.Context
 		expectedParsed *parsedCmdCtx
 		expectedErr    bool
 	}{
 		{
-			name: "noSubnet",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "198.51.45.9:53",
-				// no --ns-map
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "noSubnet",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
@@ -56,18 +45,9 @@ func Test_parseCmdCtx(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			name: "subnetPassedAsArg",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "198.51.45.9:53",
-				// no --ns-map
-				"--subnet", "1.2.3.0",
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "subnetPassedAsArg",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"1.2.3.0"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -90,34 +70,16 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name: "badSubnetPassedAsArg",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "198.51.45.9:53",
-				// no --ns-map
-				"--subnet", "badSubnet",
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "badSubnetPassedAsArg",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"badSubnet"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr:    true,
 			expectedParsed: nil,
 		},
 		{
-			name: "subnetFromMap",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "198.51.45.9:53",
-				// no --ns-map
-				"--subnet", "mysubnet",
-				"--subnet-map", "mysubnet=3.4.5.0",
-				"--timeout", "2s",
-			},
+			name:   "subnetFromMap",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"mysubnet"}, "--subnet-map": map[string]netip.Addr{"mysubnet": netip.MustParseAddr("3.4.5.0")}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -140,18 +102,9 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name: "subnetAll",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "1.2.3.4:53",
-				// no --ns-map
-				"--subnet", "all",
-				"--subnet-map", "subnetName=1.1.1.0",
-				"--timeout", "2s",
-			},
+			name:   "subnetAll",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"all"}, "--subnet-map": map[string]netip.Addr{"subnetName": netip.MustParseAddr("1.1.1.0")}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -175,18 +128,9 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		// --ns tests!
 		{
-			name: "nsPassedAsArg",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "198.51.45.9:53",
-				// no --ns-map
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "nsPassedAsArg",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -209,33 +153,15 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name: "badNSPassedAsArg",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "badns",
-				// no --ns-map
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "badNSPassedAsArg",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"badns"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: true,
 		},
 		{
-			name: "nsFromMap",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "nsFromMap",
-				"--ns-map", "nsFromMap=1.2.3.4:53",
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "nsFromMap",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"nsFromMap"}, "--ns-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -258,18 +184,9 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name: "nsAll",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "all",
-				"--ns-map", "nsFromMap=1.2.3.4:53",
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "nsAll",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"all"}, "--ns-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -292,18 +209,9 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name: "namedNameserver",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "dns1.p09.nsone.net.:53",
-				// no --ns-map
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "namedNameserver",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"dns1.p09.nsone.net.:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -326,29 +234,16 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name: "namedNameserverErr",
-			args: []string{
-				"shovel", "dig", "combine",
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--rtype", "A",
-				"--ns", "dns1.p09.nsone.net.53",
-				// no --ns-map
-				// no --subnet
-				// no --subnet-map
-				"--timeout", "2s",
-			},
+			name:   "namedNameserverErr",
+			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--fqdn": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--ns": []string{"dns1.p09.nsone.net.53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+
 			expectedErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			app := buildApp()
-			pr, err := app.Parse(tt.args, warg.LookupMap(nil))
-			require.Nil(t, err)
-
-			actualParsed, actualErr := parseCmdCtx(pr.Context)
+			actualParsed, actualErr := parseCmdCtx(tt.cmdCtx)
 			if tt.expectedErr {
 				require.NotNil(t, actualErr)
 				return
@@ -380,49 +275,6 @@ func Test_parseCmdCtx(t *testing.T) {
 			}
 			require.Equal(t, tt.expectedParsed, actualParsed)
 
-		})
-	}
-}
-
-func TestRunCLI(t *testing.T) {
-	updateGolden := os.Getenv("SHOVEL_TEST_UPDATE_GOLDEN") != ""
-	tests := []struct {
-		name   string
-		app    warg.App
-		args   []string
-		lookup warg.LookupFunc
-	}{
-		{
-			name: "simple",
-			app:  buildApp(),
-			args: []string{"shovel", "dig", "combine",
-				"--config", "notthere", // Hack so shovel doesn't try to read a config
-				"--count", "1",
-				"--fqdn", "linkedin.com",
-				"--mock-dig-func", "simple", // don't really dig!
-				"--ns", "0.0.0.0:53",
-				"--rtype", "A",
-			},
-			lookup: warg.LookupMap(nil),
-		},
-		{
-			name: "twocount",
-			app:  buildApp(),
-			args: []string{"shovel", "dig", "combine",
-				"--config", "notthere", // Hack so shovel doesn't try to read a config
-				"--count", "2",
-				"--fqdn", "linkedin.com",
-				"--mock-dig-func", "twocount", // don't really dig!
-				"--ns", "0.0.0.0:53",
-				"--rtype", "A",
-			},
-			lookup: warg.LookupMap(nil),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			warg.GoldenTest(t, tt.app, tt.args, tt.lookup, updateGolden)
 		})
 	}
 }

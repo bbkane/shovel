@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"go.bbkane.com/shovel/digcombine"
 	"go.bbkane.com/warg"
 	"go.bbkane.com/warg/command"
 	"go.bbkane.com/warg/config/yamlreader"
@@ -19,7 +20,7 @@ var version string
 func digCombineCmd(digFooter string) command.Command {
 	return command.New(
 		"Dig combinations of FQDNs/RTypes/Subnets/NSs and summarize results",
-		runDigCombine,
+		digcombine.Run,
 		command.Footer(digFooter),
 		command.Flag(
 			"--count",
