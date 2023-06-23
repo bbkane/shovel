@@ -566,6 +566,19 @@ func TestRunHelp(t *testing.T) {
 			},
 			lookup: warg.LookupMap(nil),
 		},
+		{
+			name: "twocount",
+			app:  buildApp(),
+			args: []string{"shovel", "dig",
+				"--config", "notthere", // Hack so shovel doesn't try to read a config
+				"--count", "2",
+				"--fqdn", "linkedin.com",
+				"--mock-dig-func", "twocount", // don't really dig!
+				"--ns", "0.0.0.0:53",
+				"--rtype", "A",
+			},
+			lookup: warg.LookupMap(nil),
+		},
 	}
 
 	for _, tt := range tests {

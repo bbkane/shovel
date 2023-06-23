@@ -29,6 +29,7 @@ func digCmd(digFooter string) command.Command {
 			),
 			flag.ConfigPath("dig.count"),
 			flag.Required(),
+			flag.Alias("-c"),
 		),
 		command.Flag(
 			"--fqdn",

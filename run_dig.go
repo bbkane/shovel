@@ -53,6 +53,12 @@ func getDigFunc(name string) digOneFunc {
 				{Answers: []string{"1.2.3.4"}, Err: nil},
 			},
 		),
+		"twocount": digOneFuncMock(
+			[]digOneReturns{
+				{Answers: []string{"1.2.3.4"}, Err: nil},
+				{Answers: []string{"1.2.3.4"}, Err: nil},
+			},
+		),
 	}
 	dig, exists := digs[name]
 	if !exists {
@@ -248,17 +254,30 @@ func runDig(cmdCtx command.Context) error {
 	t.SetStyle(table.StyleRounded)
 	t.SetOutputMirror(parsed.Stdout)
 
-	columnConfigs := []table.ColumnConfig{
-		{Number: 1, AutoMerge: true}, // FQDN
-		{Number: 2, AutoMerge: true}, // Rtype
-		{Number: 3, AutoMerge: true}, // Subnet
-		{Number: 4, AutoMerge: true}, // Nameserver
-	}
 	// due to the way parsing works, if the first subnet is nil,
-	// we can assume the rest are too.
+	// we can assume the rest are too. If so, hide the subnet column
+	hideSubnets := false
 	if len(parsed.DigRepeatParams) > 0 && parsed.DigRepeatParams[0].DigOneParams.SubnetIP == nil {
-		columnConfigs[2].Hidden = true
+		// columnConfigs[2].Hidden = true
+		hideSubnets = true
 	}
+
+	hideCount := false
+	// due to the way parsing works, if the first count is none,
+	// we can assume the rest are too. If so, hide the count column
+	if len(parsed.DigRepeatParams) > 0 && parsed.DigRepeatParams[0].Count == 1 {
+		hideCount = true
+	}
+
+	columnConfigs := []table.ColumnConfig{
+		{Name: "FQDN", AutoMerge: true},
+		{Name: "Rtype", AutoMerge: true},
+		{Name: "Subnet", AutoMerge: true, Hidden: hideSubnets},
+		{Name: "Nameserver", AutoMerge: true},
+		{Name: "Ans/Err"},
+		{Name: "Count", Hidden: hideCount},
+	}
+
 	t.SetColumnConfigs(columnConfigs)
 
 	t.AppendHeader(table.Row{"FQDN", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
