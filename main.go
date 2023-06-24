@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.bbkane.com/shovel/digcombine"
+	"go.bbkane.com/shovel/diglist"
 	"go.bbkane.com/warg"
 	"go.bbkane.com/warg/command"
 	"go.bbkane.com/warg/config/yamlreader"
@@ -109,11 +110,10 @@ func digCombineCmd(digFooter string) command.Command {
 	)
 }
 
-// TODO: test this with flags and configs...
 func digListCmd(digFooter string) command.Command {
 	return command.New(
 		"Dig and summarize - TOOD: better description",
-		command.DoNothing,
+		diglist.Run,
 		command.Footer(digFooter),
 		command.Flag(
 			"--count",
@@ -140,7 +140,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Required(),
 		),
 		command.Flag(
-			"--ns",
+			"--nameserver",
 			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53",
 			slice.String(),
 			flag.ConfigPath("dig.list[].nameserver"),
