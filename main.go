@@ -109,7 +109,80 @@ func digCombineCmd(digFooter string) command.Command {
 	)
 }
 
-// func digListCmd()
+// TODO: test this with flags and configs...
+func digListCmd(digFooter string) command.Command {
+	return command.New(
+		"Dig and summarize - TOOD: better description",
+		command.DoNothing,
+		command.Footer(digFooter),
+		command.Flag(
+			"--count",
+			"Number of times to dig",
+			slice.Int(),
+			flag.ConfigPath("dig.list[].count"),
+			flag.Required(),
+			flag.Alias("-c"),
+		),
+		command.Flag(
+			"--fqdn",
+			"FQDNs to dig",
+			slice.String(),
+			flag.ConfigPath("dig.list[].fqdn"),
+			flag.Required(),
+			flag.Alias("-f"),
+		),
+		command.Flag(
+			"--mock-dig-func",
+			"Flag to mock dig func. Used only for testing",
+			scalar.String(
+				scalar.Default("none"),
+			),
+			flag.Required(),
+		),
+		command.Flag(
+			"--ns",
+			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53",
+			slice.String(),
+			flag.ConfigPath("dig.list[].nameserver"),
+			flag.Required(),
+			flag.Alias("-n"),
+		),
+		command.Flag(
+			"--protocol",
+			"Protocol to use when digging",
+			slice.String(
+				slice.Choices("udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"),
+			),
+			flag.Required(),
+			flag.Alias("-p"),
+			flag.ConfigPath("dig.list[].protocol"),
+		),
+		command.Flag(
+			"--rtype",
+			"Record types",
+			slice.String(
+				slice.Choices("A", "AAAA", "CNAME", "TXT"),
+			),
+			flag.ConfigPath("dig.list[].rtype"),
+			flag.Required(),
+			flag.Alias("-r"),
+		),
+		command.Flag(
+			"--subnet",
+			"Client subnet. Example: 101.251.8.0 for China. Set to 'none' not use a client subnet",
+			slice.String(),
+			flag.ConfigPath("dig.list[].subnet"),
+			flag.Alias("-s"),
+		),
+		command.Flag(
+			"--timeout",
+			"Timeout for each individual DNS request",
+			slice.Duration(),
+			flag.Required(),
+			flag.ConfigPath("dig.list[].timeout"),
+		),
+	)
+}
 
 func buildApp() warg.App {
 	digFooter := `Homepage: https://github.com/bbkane/shovel
@@ -126,6 +199,10 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 				section.ExistingCommand(
 					"combine",
 					digCombineCmd(digFooter),
+				),
+				section.ExistingCommand(
+					"list",
+					digListCmd(digFooter),
 				),
 			),
 			section.Footer(digFooter),
