@@ -3,12 +3,33 @@ package diglist
 import (
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/warg/command"
+	"gopkg.in/yaml.v3"
 )
+
+type Rdata struct {
+	Content []string `yaml:"content"`
+	Count   int      `yaml:"count"`
+}
+
+type Error struct {
+	Count int    `yaml:"count"`
+	Msg   string `yaml:"msg"`
+}
+
+type Result struct {
+	Rdata  []Rdata `yaml:"rdata"`
+	Errors []Error `yaml:"errors"`
+}
+
+type Return struct {
+	Results []Result `yaml:"results"`
+}
 
 func Run(cmdCtx command.Context) error {
 
@@ -51,37 +72,52 @@ func Run(cmdCtx command.Context) error {
 
 	}
 
+	// convert input params to API params
 	digRepeatParamsSlice := []dig.DigRepeatParams{}
 
-	for _, count := range counts {
-		for _, fqdn := range fqdns {
-			for _, nameserver := range nameservers {
-				for _, protocol := range protocols {
-					for _, rtype := range rtypes {
-						for _, subnetIP := range subnetIPs {
-							for _, timeout := range timeouts {
-								digRepeatParamsSlice = append(digRepeatParamsSlice, dig.DigRepeatParams{
-									DigOneParams: dig.DigOneParams{
-										FQDN:             fqdn,
-										NameserverIPPort: nameserver, // TODO: ensure this ends in port...
-										Proto:            protocol,
-										Rtype:            dns.StringToType[rtype],
-										SubnetIP:         subnetIP,
-										Timeout:          timeout,
-									},
-									Count: count,
-								},
-								)
-							}
-						}
-					}
-				}
-			}
+	for i := range fqdns {
+		digRepeatParamsSlice = append(digRepeatParamsSlice, dig.DigRepeatParams{
+			DigOneParams: dig.DigOneParams{
+				FQDN:             fqdns[i],
+				NameserverIPPort: nameservers[i],
+				Proto:            protocols[i],
+				Rtype:            dns.StringToType[rtypes[i]],
+				SubnetIP:         subnetIPs[i],
+				Timeout:          timeouts[i],
+			},
+			Count: counts[i],
+		},
+		)
+	}
+
+	dRes := dig.DigList(digRepeatParamsSlice, dig.DigOne)
+
+	// convert API result to printable result
+
+	ret := Return{
+		Results: make([]Result, len(dRes)),
+	}
+	for i := range dRes {
+		ret.Results[i].Rdata = make([]Rdata, len(dRes[i].Answers))
+		for r := range dRes[i].Answers {
+			ret.Results[i].Rdata[r].Content = dRes[i].Answers[r].StringSlice
+			ret.Results[i].Rdata[r].Count = dRes[i].Answers[r].Count
+		}
+
+		ret.Results[i].Errors = make([]Error, len(dRes[i].Errors))
+		for e := range dRes[i].Errors {
+			ret.Results[i].Errors[e].Msg = dRes[i].Errors[e].String
+			ret.Results[i].Errors[e].Count = dRes[i].Errors[e].Count
+
 		}
 	}
 
-	results := dig.DigList(digRepeatParamsSlice, dig.DigOne)
-	fmt.Printf("%v\n", results)
+	encoder := yaml.NewEncoder(os.Stdout)
+	encoder.SetIndent(2)
+	err := encoder.Encode(&ret)
+	if err != nil {
+		return fmt.Errorf("could not serialize to yaml: %w", err)
+	}
 
 	return nil
 }
