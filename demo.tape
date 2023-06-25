@@ -7,11 +7,11 @@ Output demo.gif
 
 Set Shell zsh
 Set PlaybackSpeed 0.5
-Set TypingSpeed 75ms
+Set TypingSpeed 100ms
 
 Set FontSize 22
 Set Height 1000
-Set Width 1700
+Set Width 1750
 Set Padding 50
 
 # https://github.com/charmbracelet/vhs/issues/39#issuecomment-1296334921
@@ -22,11 +22,11 @@ Show
 Type "bat ~/.config/shovel.yaml"
 Sleep 200ms
 Enter
-Sleep 1s
+Sleep 2s
 
-Type "shovel dig -f www.linkedin.com -r CNAME -s china -s usa"
+Type "shovel dig combine -f www.linkedin.com -r CNAME -s china -s usa -c 10"
 Sleep 200ms
 Enter
-Sleep 1s
+Sleep 2s
 
 Sleep 3s

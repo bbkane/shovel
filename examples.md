@@ -35,18 +35,19 @@ shovel dig \
 ```yaml
 ## ~/.config/shovel.yaml
 dig:
-  count: 10
-  nameservers:
-  - dyn
-  # - google
-  - ns1
-  nameserver-map:
-    dyn: ns1.p43.dynect.net.:53
-    google: dns.google.:53
-    ns1: dns1.p09.nsone.net.:53
-  subnet-map:
-    china: 101.251.8.0
-    usa: 100.43.128.0
+  combine:
+    count: 10
+    nameservers:
+    - dyn
+    # - google
+    - ns1
+    nameserver-map:
+      dyn: ns1.p43.dynect.net.:53
+      google: dns.google.:53
+      ns1: dns1.p09.nsone.net.:53
+    subnet-map:
+      china: 101.251.8.0
+      usa: 100.43.128.0
 ```
 
 ## Override values in the config with flags
