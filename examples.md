@@ -1,11 +1,13 @@
 Examples (assuming BASH-like shell):
 
-# `shovel dig`
+# `shovel dig combine` 
+
+Builds dig queries based on combinations of input flags, then prints a table of results.
 
 ## Minimal no-config example
 
 ```bash
-shovel dig \
+shovel dig combine \
     --fqdn linkedin.com \
     --ns dns.google:53
 ```
@@ -13,7 +15,7 @@ shovel dig \
 ## Maximal no-config example
 
 ```bash
-shovel dig \
+shovel dig combine \
     --count 20 \
     --fqdn linkedin.com \
     --fqdn www.linkedin.com \
@@ -36,13 +38,13 @@ shovel dig \
 ## ~/.config/shovel.yaml
 dig:
   combine:
-    count: 10
+    count: 1
     nameservers:
-    - dyn
+    - azure
     # - google
     - ns1
     nameserver-map:
-      dyn: ns1.p43.dynect.net.:53
+      azure: ns1-42.azure-dns.com.:53
       google: dns.google.:53
       ns1: dns1.p09.nsone.net.:53
     subnet-map:
@@ -53,17 +55,7 @@ dig:
 ## Override values in the config with flags
 
 ```bash
-shovel dig \
-    --count 20 \
-    --fqdn www.linkedin.com \
-    --rtype CNAME \
-    --subnet 100.43.128.0
-```
-
-## Override values in the config with flags
-
-```bash
-shovel dig \
+shovel dig combine \
     --count 20 \
     --fqdn www.linkedin.com \
     --rtype CNAME \
@@ -73,7 +65,7 @@ shovel dig \
 ## Use 'all' to pass everything in --ns-map/--subnet-map
 
 ```bash
-shovel dig \
+shovel dig combine \
     --fqdn www.linkedin.com \
     --rtype CNAME \
     --ns all \
@@ -91,5 +83,43 @@ In another tab:
 
 ```bash
 shovel dig -f linkedin.com -r TXT -p udp4
+```
+
+# `shovel dig list`
+
+Pruduces digs from a list of inputs and prints the result as YAML
+
+## Minimal no-config example
+
+```bash
+shovel dig list \
+	--count 10 \
+	--fqdn www.linkedin.com \
+	--nameserver ns1-42.azure-dns.com.:53 \
+	--protocol udp \
+	--rtype A \
+	--subnet 101.251.8.0 \
+	--timeout 5s
+```
+
+## Example Config
+
+```yaml
+dig:
+  list:
+  - count: 10
+    fqdn: www.linkedin.com
+    nameserver: ns1-42.azure-dns.com.:53
+    protocol: udp
+    rtype: A
+    subnet: 101.251.8.0
+    timeout: 5s
+  - count: 10
+    fqdn: www.linkedin.com
+    nameserver: ns1-42.azure-dns.com.:53
+    protocol: udp
+    rtype: AAAA  # different rtype
+    subnet: 101.251.8.0
+    timeout: 5s
 ```
 
