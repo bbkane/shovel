@@ -34,7 +34,7 @@ type Return struct {
 func Run(cmdCtx command.Context) error {
 
 	counts := cmdCtx.Flags["--count"].([]int)
-	fqdns := cmdCtx.Flags["--fqdn"].([]string)
+	fqdns := cmdCtx.Flags["--qname"].([]string)
 	nameservers := cmdCtx.Flags["--nameserver"].([]string)
 	protocols := cmdCtx.Flags["--protocol"].([]string)
 	rtypes := cmdCtx.Flags["--rtype"].([]string)
@@ -43,17 +43,17 @@ func Run(cmdCtx command.Context) error {
 
 	lens := map[string]int{
 		"--count":      len(counts),
-		"--fqdn":       len(fqdns),
+		"--qname":      len(fqdns),
 		"--nameserver": len(nameservers),
 		"--protocol":   len(protocols),
 		"--rtype":      len(rtypes),
 		"--subnet":     len(subnets),
 		"--timeout":    len(timeouts),
 	}
-	target_len := lens["--fqdn"]
+	target_len := lens["--qname"]
 	for name, l := range lens {
 		if l != target_len {
-			return fmt.Errorf("unexpected count of flag %s: %d. Expected %d to match count of --fqdn", name, l, target_len)
+			return fmt.Errorf("unexpected count of flag %s: %d. Expected %d to match count of --qname", name, l, target_len)
 		}
 	}
 

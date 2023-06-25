@@ -34,12 +34,12 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Alias("-c"),
 		),
 		command.Flag(
-			"--fqdn",
-			"FQDNs to dig",
+			"--qname",
+			"Qualified names to dig",
 			slice.String(),
-			flag.ConfigPath("dig.combine.fqdns"),
+			flag.ConfigPath("dig.combine.qnames"),
 			flag.Required(),
-			flag.Alias("-f"),
+			flag.Alias("-q"),
 		),
 		command.Flag(
 			"--rtype",
@@ -112,7 +112,7 @@ func digCombineCmd(digFooter string) command.Command {
 
 func digListCmd(digFooter string) command.Command {
 	return command.New(
-		"Dig and summarize - TOOD: better description",
+		"Pruduces digs from a list of inputs and prints the summarized results as YAML",
 		diglist.Run,
 		command.Footer(digFooter),
 		command.Flag(
@@ -124,12 +124,12 @@ func digListCmd(digFooter string) command.Command {
 			flag.Alias("-c"),
 		),
 		command.Flag(
-			"--fqdn",
-			"FQDNs to dig",
+			"--qname",
+			"qualified names to dig",
 			slice.String(),
-			flag.ConfigPath("dig.list[].fqdn"),
+			flag.ConfigPath("dig.list[].qname"),
 			flag.Required(),
-			flag.Alias("-f"),
+			flag.Alias("-q"),
 		),
 		command.Flag(
 			"--mock-dig-func",

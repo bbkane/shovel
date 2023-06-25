@@ -29,7 +29,7 @@ func TestRunCLI(t *testing.T) {
 			args: []string{"shovel", "dig", "combine",
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "1",
-				"--fqdn", "linkedin.com",
+				"--qname", "linkedin.com",
 				"--mock-dig-func", "simple", // don't really dig!
 				"--ns", "0.0.0.0:53",
 				"--rtype", "A",
@@ -42,7 +42,7 @@ func TestRunCLI(t *testing.T) {
 			args: []string{"shovel", "dig", "combine",
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "2",
-				"--fqdn", "linkedin.com",
+				"--qname", "linkedin.com",
 				"--mock-dig-func", "twocount", // don't really dig!
 				"--ns", "0.0.0.0:53",
 				"--rtype", "A",

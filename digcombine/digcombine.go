@@ -80,7 +80,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
-	fqdns := cmdCtx.Flags["--fqdn"].([]string)
+	fqdns := cmdCtx.Flags["--qname"].([]string)
 	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
 	proto := cmdCtx.Flags["--protocol"].(string)
 

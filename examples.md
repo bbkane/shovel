@@ -8,7 +8,7 @@ Builds dig queries based on combinations of input flags, then prints a table of 
 
 ```bash
 shovel dig combine \
-    --fqdn linkedin.com \
+    --qname linkedin.com \
     --ns dns.google:53
 ```
 
@@ -17,8 +17,8 @@ shovel dig combine \
 ```bash
 shovel dig combine \
     --count 20 \
-    --fqdn linkedin.com \
-    --fqdn www.linkedin.com \
+    --qname linkedin.com \
+    --qname www.linkedin.com \
     --ns cloudflare \
     --ns google \
     --ns-map cloudflare=1.1.1.1:53 \
@@ -57,7 +57,7 @@ dig:
 ```bash
 shovel dig combine \
     --count 20 \
-    --fqdn www.linkedin.com \
+    --qname www.linkedin.com \
     --rtype CNAME \
     --subnet 100.43.128.0
 ```
@@ -66,7 +66,7 @@ shovel dig combine \
 
 ```bash
 shovel dig combine \
-    --fqdn www.linkedin.com \
+    --qname www.linkedin.com \
     --rtype CNAME \
     --ns all \
     --subnet all
@@ -82,7 +82,7 @@ sshuttle --dns -r username@host --ns-hosts=ns1.p43.dynect.net,dns1.p09.nsone.net
 In another tab:
 
 ```bash
-shovel dig -f linkedin.com -r TXT -p udp4
+shovel dig combine -q linkedin.com -r TXT -p tcp4
 ```
 
 # `shovel dig list`
@@ -94,7 +94,7 @@ Pruduces digs from a list of inputs and prints the result as YAML
 ```bash
 shovel dig list \
 	--count 10 \
-	--fqdn www.linkedin.com \
+	--qname www.linkedin.com \
 	--nameserver ns1-42.azure-dns.com.:53 \
 	--protocol udp \
 	--rtype A \
@@ -105,21 +105,26 @@ shovel dig list \
 ## Example Config
 
 ```yaml
+## /tmp/shovel.yaml
 dig:
   list:
   - count: 10
-    fqdn: www.linkedin.com
+    qname: www.linkedin.com
     nameserver: ns1-42.azure-dns.com.:53
     protocol: udp
     rtype: A
     subnet: 101.251.8.0
     timeout: 5s
   - count: 10
-    fqdn: www.linkedin.com
+    qname: www.linkedin.com
     nameserver: ns1-42.azure-dns.com.:53
     protocol: udp
     rtype: AAAA  # different rtype
     subnet: 101.251.8.0
     timeout: 5s
+```
+
+```bash
+shovel dig list --config /tmp/shovel.yaml  # read params from config
 ```
 
