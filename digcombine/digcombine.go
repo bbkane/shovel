@@ -249,6 +249,10 @@ func Run(cmdCtx command.Context) error {
 		return err
 	}
 
+	if len(parsed.DigRepeatParams) < 1 {
+		return errors.New("no dig parameters passed")
+	}
+
 	results := dig.DigList(parsed.DigRepeatParams, parsed.Dig)
 
 	t := table.NewWriter()
@@ -257,18 +261,11 @@ func Run(cmdCtx command.Context) error {
 
 	// due to the way parsing works, if the first subnet is nil,
 	// we can assume the rest are too. If so, hide the subnet column
-	hideSubnets := false
-	if len(parsed.DigRepeatParams) > 0 && parsed.DigRepeatParams[0].DigOneParams.SubnetIP == nil {
-		// columnConfigs[2].Hidden = true
-		hideSubnets = true
-	}
+	hideSubnets := parsed.DigRepeatParams[0].DigOneParams.SubnetIP == nil
 
-	hideCount := false
 	// due to the way parsing works, if the first count is none,
 	// we can assume the rest are too. If so, hide the count column
-	if len(parsed.DigRepeatParams) > 0 && parsed.DigRepeatParams[0].Count == 1 {
-		hideCount = true
-	}
+	hideCount := parsed.DigRepeatParams[0].Count == 1
 
 	columnConfigs := []table.ColumnConfig{
 		{Name: "FQDN", AutoMerge: true},
