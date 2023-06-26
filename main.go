@@ -173,6 +173,7 @@ func digListCmd(digFooter string) command.Command {
 			slice.String(),
 			flag.ConfigPath("dig.list[].subnet"),
 			flag.Alias("-s"),
+			flag.Required(),
 		),
 		command.Flag(
 			"--timeout",
