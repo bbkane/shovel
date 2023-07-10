@@ -17,6 +17,9 @@ func TestBuildApp(t *testing.T) {
 
 func TestRunCLI(t *testing.T) {
 	updateGolden := os.Getenv("SHOVEL_TEST_UPDATE_GOLDEN") != ""
+	if !updateGolden {
+		t.Log("To update golden files, run: SHOVEL_TEST_UPDATE_GOLDEN=1 go test ./... ")
+	}
 	tests := []struct {
 		name   string
 		app    warg.App

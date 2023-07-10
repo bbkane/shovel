@@ -1,5 +1,5 @@
 ╭──────────────┬───────┬──────────────────┬─────────╮
-│ FQDN         │ RTYPE │ NAMESERVER       │ ANS/ERR │
+│ QNAME        │ RTYPE │ NAMESERVER       │ ANS/ERR │
 ├──────────────┼───────┼──────────────────┼─────────┤
 │ linkedin.com │ A     │ # passed ns:port │ 1.2.3.4 │
 │              │       │ 0.0.0.0:53       │         │
