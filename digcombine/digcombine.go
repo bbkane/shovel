@@ -268,7 +268,7 @@ func Run(cmdCtx command.Context) error {
 	hideCount := parsed.DigRepeatParams[0].Count == 1
 
 	columnConfigs := []table.ColumnConfig{
-		{Name: "FQDN", AutoMerge: true},
+		{Name: "Qname", AutoMerge: true},
 		{Name: "Rtype", AutoMerge: true},
 		{Name: "Subnet", AutoMerge: true, Hidden: hideSubnets},
 		{Name: "Nameserver", AutoMerge: true},
@@ -278,7 +278,7 @@ func Run(cmdCtx command.Context) error {
 
 	t.SetColumnConfigs(columnConfigs)
 
-	t.AppendHeader(table.Row{"FQDN", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
+	t.AppendHeader(table.Row{"Qname", "Rtype", "Subnet", "Nameserver", "Ans/Err", "Count"})
 
 	for i := 0; i < len(parsed.DigRepeatParams); i++ {
 		printDigRepeat(t, *parsed, parsed.DigRepeatParams[i], results[i])
