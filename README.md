@@ -56,8 +56,9 @@ See [Go Developer Tooling](https://www.bbkane.com/blog/go-developer-tooling/) fo
 ## Dev Notes
 
 - Go doc: https://pkg.go.dev/github.com/miekg/dns
-
 - `miekg/dns` exmple: https://github.com/miekg/exdns/blob/master/q/q.go
+- Look up IP subnets for a country: http://www.nirsoft.net/countryip/
+
 
 
 
