@@ -59,6 +59,7 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.combine.nameservers"),
 			flag.Required(),
 			flag.Alias("-n"),
+			flag.UnsetSentinel("UNSET"),
 		),
 		command.Flag(
 			"--ns-map",
@@ -72,6 +73,7 @@ func digCombineCmd(digFooter string) command.Command {
 			slice.String(),
 			flag.ConfigPath("dig.combine.subnets"),
 			flag.Alias("-s"),
+			flag.UnsetSentinel("UNSET"),
 		),
 		command.Flag(
 			"--subnet-map",
@@ -146,6 +148,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.list[].nameserver"),
 			flag.Required(),
 			flag.Alias("-n"),
+			flag.UnsetSentinel("UNSET"),
 		),
 		command.Flag(
 			"--protocol",
@@ -174,6 +177,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.list[].subnet"),
 			flag.Alias("-s"),
 			flag.Required(),
+			flag.UnsetSentinel("UNSET"),
 		),
 		command.Flag(
 			"--timeout",
