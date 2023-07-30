@@ -20,7 +20,7 @@ var version string
 
 func digCombineCmd(digFooter string) command.Command {
 	return command.New(
-		"Dig combinations of FQDNs/RTypes/Subnets/NSs and summarize results",
+		"Dig combinations of QNames/RTypes/Subnets/NSs and summarize results",
 		digcombine.Run,
 		command.Footer(digFooter),
 		command.Flag(

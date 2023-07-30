@@ -29,7 +29,7 @@ func Test_digOne(t *testing.T) {
 			name: "linkedinNoSubnet",
 			dig:  DigOne,
 			p: DigOneParams{
-				FQDN:             "linkedin.com",
+				Qname:            "linkedin.com",
 				Rtype:            dns.TypeA,
 				NameserverIPPort: "8.8.8.8:53",
 				SubnetIP:         nil,
@@ -44,7 +44,7 @@ func Test_digOne(t *testing.T) {
 			name: "linkedinChinaSubnet",
 			dig:  DigOne,
 			p: DigOneParams{
-				FQDN:             "linkedin.com",
+				Qname:            "linkedin.com",
 				Rtype:            dns.TypeA,
 				NameserverIPPort: "8.8.8.8:53",
 				SubnetIP:         net.ParseIP("101.251.8.0"),
@@ -59,7 +59,7 @@ func Test_digOne(t *testing.T) {
 			name: "nsName",
 			dig:  DigOne,
 			p: DigOneParams{
-				FQDN:  "linkedin.com",
+				Qname: "linkedin.com",
 				Rtype: dns.TypeA,
 				// This can end in '.' or not, it's fine!
 				NameserverIPPort: "dns1.p09.nsone.net:53",

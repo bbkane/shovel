@@ -22,11 +22,11 @@ Show
 Type "bat ~/.config/shovel.yaml"
 Sleep 200ms
 Enter
-Sleep 2s
+Sleep 8s
 
-Type "shovel dig combine -f www.linkedin.com -r CNAME -s china -s usa -c 10"
+Type "shovel dig combine -q www.linkedin.com -r CNAME -s china -s usa -c 10"
 Sleep 200ms
 Enter
-Sleep 2s
+Sleep 8s
 
 Sleep 3s

@@ -2,7 +2,7 @@
 
 Make a lot of DNS requests and count the results! Useful for testing complex dynamic DNS records.
 
-Pass multiple FQDNs, nameservers, record types, and client subnets, either via command line flags, a config, or a combo of both. shovel will dig all combinations of those and show you the results.
+Pass multiple qnames, nameservers, record types, and client subnets, either via command line flags, a config, or a combo of both. shovel will dig all combinations of those and show you the results.
 
 ## Use
 
@@ -17,9 +17,9 @@ Also see [examples.md](./examples.md)
 This uses the same config as the above gif. No subnets passed, so that column is excluded from the output.
 
 ```bash
-$ shovel dig --fqdn linkedin.com --rtype A --rtype AAAA
+$ shovel dig --qname linkedin.com --rtype A --rtype AAAA
 ╭──────────────┬───────┬──────────────────┬─────────────────┬───────╮
-│ FQDN         │ RTYPE │ NAMESERVER       │ ANS/ERR         │ COUNT │
+│ QNAME         │ RTYPE │ NAMESERVER       │ ANS/ERR         │ COUNT │
 ├──────────────┼───────┼──────────────────┼─────────────────┼───────┤
 │ linkedin.com │ A     │ # ns1            │ 13.107.42.14    │    10 │
 │              │       │ 198.51.45.9:53   │                 │       │

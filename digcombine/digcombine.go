@@ -80,7 +80,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
-	fqdns := cmdCtx.Flags["--qname"].([]string)
+	qnames := cmdCtx.Flags["--qname"].([]string)
 	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
 	proto := cmdCtx.Flags["--protocol"].(string)
 
@@ -170,13 +170,13 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	digRepeatParamsSlice := []dig.DigRepeatParams{}
 
-	for _, fqdn := range fqdns {
+	for _, qname := range qnames {
 		for _, rtype := range rtypes {
 			for _, subnet := range subnets {
 				for _, nameserver := range nameservers {
 					digRepeatParamsSlice = append(digRepeatParamsSlice, dig.DigRepeatParams{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             fqdn,
+							Qname:            qname,
 							Rtype:            rtype,
 							NameserverIPPort: nameserver,
 							SubnetIP:         subnet,
@@ -218,7 +218,7 @@ func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p dig.DigRepeatParams, 
 	// answers
 	for _, ans := range r.Answers {
 		t.AppendRow(table.Row{
-			p.DigOneParams.FQDN,
+			p.DigOneParams.Qname,
 			dns.TypeToString[p.DigOneParams.Rtype],
 			fmtSubnet(p.DigOneParams.SubnetIP),
 			fmtNS(p.DigOneParams.NameserverIPPort),
@@ -229,7 +229,7 @@ func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p dig.DigRepeatParams, 
 	// errors
 	for _, err := range r.Errors {
 		t.AppendRow(table.Row{
-			p.DigOneParams.FQDN,
+			p.DigOneParams.Qname,
 			dns.TypeToString[p.DigOneParams.Rtype],
 			fmtSubnet(p.DigOneParams.SubnetIP),
 			fmtNS(p.DigOneParams.NameserverIPPort),

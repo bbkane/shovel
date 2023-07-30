@@ -27,7 +27,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "198.51.45.9:53",
 							SubnetIP:         nil,
@@ -53,7 +53,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "198.51.45.9:53",
 							SubnetIP:         net.ParseIP("1.2.3.0"),
@@ -85,7 +85,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "198.51.45.9:53",
 							SubnetIP:         net.ParseIP("3.4.5.0"),
@@ -110,7 +110,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "1.2.3.4:53",
 							SubnetIP:         net.ParseIP("1.1.1.0"),
@@ -136,7 +136,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "198.51.45.9:53",
 							SubnetIP:         nil,
@@ -167,7 +167,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "1.2.3.4:53",
 							SubnetIP:         nil,
@@ -192,7 +192,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "1.2.3.4:53",
 							SubnetIP:         nil,
@@ -217,7 +217,7 @@ func Test_parseCmdCtx(t *testing.T) {
 				DigRepeatParams: []dig.DigRepeatParams{
 					{
 						DigOneParams: dig.DigOneParams{
-							FQDN:             "linkedin.com",
+							Qname:            "linkedin.com",
 							Rtype:            dns.TypeA,
 							NameserverIPPort: "dns1.p09.nsone.net.:53",
 							SubnetIP:         nil,

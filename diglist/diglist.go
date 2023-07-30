@@ -34,7 +34,7 @@ type Return struct {
 func Run(cmdCtx command.Context) error {
 
 	counts := cmdCtx.Flags["--count"].([]int)
-	fqdns := cmdCtx.Flags["--qname"].([]string)
+	qnames := cmdCtx.Flags["--qname"].([]string)
 	nameservers := cmdCtx.Flags["--nameserver"].([]string)
 	protocols := cmdCtx.Flags["--protocol"].([]string)
 	rtypes := cmdCtx.Flags["--rtype"].([]string)
@@ -43,7 +43,7 @@ func Run(cmdCtx command.Context) error {
 
 	lens := map[string]int{
 		"--count":      len(counts),
-		"--qname":      len(fqdns),
+		"--qname":      len(qnames),
 		"--nameserver": len(nameservers),
 		"--protocol":   len(protocols),
 		"--rtype":      len(rtypes),
@@ -75,10 +75,10 @@ func Run(cmdCtx command.Context) error {
 	// convert input params to API params
 	digRepeatParamsSlice := []dig.DigRepeatParams{}
 
-	for i := range fqdns {
+	for i := range qnames {
 		digRepeatParamsSlice = append(digRepeatParamsSlice, dig.DigRepeatParams{
 			DigOneParams: dig.DigOneParams{
-				FQDN:             fqdns[i],
+				Qname:            qnames[i],
 				NameserverIPPort: nameservers[i],
 				Proto:            protocols[i],
 				Rtype:            dns.StringToType[rtypes[i]],

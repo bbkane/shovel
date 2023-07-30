@@ -14,7 +14,7 @@ import (
 )
 
 type DigOneParams struct {
-	FQDN             string
+	Qname            string
 	Rtype            uint16
 	NameserverIPPort string
 	SubnetIP         net.IP
@@ -24,7 +24,7 @@ type DigOneParams struct {
 
 func EmptyDigOneparams() DigOneParams {
 	return DigOneParams{
-		FQDN:             "",
+		Qname:            "",
 		Rtype:            0,
 		NameserverIPPort: "",
 		SubnetIP:         nil,
@@ -52,11 +52,11 @@ func DigOneFuncMock(rets []DigOneResult) DigOneFunc {
 	}
 }
 
-// DigOne an fqdn! Returns an error for rcode != NOERROR or an empty list of answers.
+// DigOne a qname! Returns an error for rcode != NOERROR or an empty list of answers.
 // Returns answers sorted
 func DigOne(p DigOneParams) ([]string, error) {
 	m := new(dns.Msg)
-	m.SetQuestion(dns.Fqdn(p.FQDN), p.Rtype)
+	m.SetQuestion(dns.Fqdn(p.Qname), p.Rtype)
 
 	// Add subnet!
 	// https://github.com/miekg/exdns/blob/d851fa434ad51cb84500b3e18b8aa7d3bead2c51/q/q.go#L209
