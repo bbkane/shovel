@@ -1,6 +1,6 @@
 Examples (assuming BASH-like shell):
 
-# `shovel dig combine` 
+# `shovel dig combine`
 
 Builds dig queries based on combinations of input flags, then prints a table of results.
 
@@ -29,7 +29,7 @@ shovel dig combine \
     --subnet usa \
     --subnet-map china=101.251.8.0 \
     --subnet-map usa=100.43.128.0 \
-    --timeout 5s
+    --global-timeout 5s
 ```
 
 ## Example config

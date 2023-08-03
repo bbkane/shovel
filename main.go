@@ -82,13 +82,13 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.combine.subnet-map"),
 		),
 		command.Flag(
-			"--timeout",
-			"Timeout for each individual DNS request",
+			"--global-timeout",
+			"Timeout for combined DNS requests",
 			scalar.Duration(
-				scalar.Default(2*time.Second),
+				scalar.Default(30*time.Second),
 			),
 			flag.Required(),
-			flag.ConfigPath("dig.combine.timeout"),
+			flag.ConfigPath("dig.combine.global-timeout"),
 		),
 		command.Flag(
 			"--mock-dig-func",

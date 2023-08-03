@@ -1,6 +1,7 @@
 package digcombine
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -50,11 +51,13 @@ func getDigFunc(name string) dig.DigOneFunc {
 	digs := map[string]dig.DigOneFunc{
 		"none": dig.DigOne,
 		"simple": dig.DigOneFuncMock(
+			context.Background(),
 			[]dig.DigOneResult{
 				{Answers: []string{"1.2.3.4"}, Err: nil},
 			},
 		),
 		"twocount": dig.DigOneFuncMock(
+			context.Background(),
 			[]dig.DigOneResult{
 				{Answers: []string{"1.2.3.4"}, Err: nil},
 				{Answers: []string{"1.2.3.4"}, Err: nil},
@@ -70,6 +73,7 @@ func getDigFunc(name string) dig.DigOneFunc {
 
 type parsedCmdCtx struct {
 	DigRepeatParams []dig.DigRepeatParams
+	GlobalTimeout   time.Duration
 	NameserverNames map[string]string
 	SubnetNames     map[string]string
 	Dig             dig.DigOneFunc
@@ -81,7 +85,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
 	qnames := cmdCtx.Flags["--qname"].([]string)
-	timeout := cmdCtx.Flags["--timeout"].(time.Duration)
+	globalTimeout := cmdCtx.Flags["--global-timeout"].(time.Duration)
 	proto := cmdCtx.Flags["--protocol"].(string)
 
 	// rtypes
@@ -180,7 +184,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 							Rtype:            rtype,
 							NameserverIPPort: nameserver,
 							SubnetIP:         subnet,
-							Timeout:          timeout,
+							Timeout:          0, // TODO: implement per-dig timeouts
 							Proto:            proto,
 						},
 						Count: count,
@@ -196,6 +200,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		SubnetNames:     subnetNames,
 		Dig:             digFunc,
 		Stdout:          cmdCtx.Stdout,
+		GlobalTimeout:   globalTimeout,
 	}, nil
 }
 
@@ -253,7 +258,10 @@ func Run(cmdCtx command.Context) error {
 		return errors.New("no dig parameters passed")
 	}
 
-	results := dig.DigList(parsed.DigRepeatParams, parsed.Dig)
+	ctx, cancel := context.WithTimeout(context.Background(), parsed.GlobalTimeout)
+	defer cancel()
+
+	results := dig.DigList(ctx, parsed.DigRepeatParams, parsed.Dig)
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)

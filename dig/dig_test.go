@@ -1,10 +1,10 @@
 package dig
 
 import (
+	"context"
 	"net"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/require"
@@ -33,8 +33,8 @@ func Test_digOne(t *testing.T) {
 				Rtype:            dns.TypeA,
 				NameserverIPPort: "8.8.8.8:53",
 				SubnetIP:         nil,
-				Timeout:          2 * time.Second,
 				Proto:            "udp",
+				Timeout:          0,
 			},
 			expected:    []string{"13.107.42.14"},
 			expectedErr: false,
@@ -48,8 +48,8 @@ func Test_digOne(t *testing.T) {
 				Rtype:            dns.TypeA,
 				NameserverIPPort: "8.8.8.8:53",
 				SubnetIP:         net.ParseIP("101.251.8.0"),
-				Timeout:          2 * time.Second,
 				Proto:            "udp",
+				Timeout:          0,
 			},
 			expected:    []string{"13.107.42.14"},
 			expectedErr: true,
@@ -64,15 +64,15 @@ func Test_digOne(t *testing.T) {
 				// This can end in '.' or not, it's fine!
 				NameserverIPPort: "dns1.p09.nsone.net:53",
 				SubnetIP:         nil,
-				Timeout:          2 * time.Second,
 				Proto:            "udp",
+				Timeout:          0,
 			},
 			expected:    []string{"13.107.42.14"},
 			expectedErr: false,
 		},
 		{
 			name: "mock",
-			dig: DigOneFuncMock([]DigOneResult{
+			dig: DigOneFuncMock(context.Background(), []DigOneResult{
 				{
 					Answers: []string{"hi"},
 					Err:     nil,
@@ -85,7 +85,7 @@ func Test_digOne(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, actualErr := tt.dig(tt.p)
+			actual, actualErr := tt.dig(context.Background(), tt.p)
 
 			if tt.expectedErr {
 				require.NotNil(t, actualErr)
@@ -116,7 +116,7 @@ func Test_digVaried(t *testing.T) {
 					Count:        1,
 				},
 			},
-			dig: DigOneFuncMock([]DigOneResult{
+			dig: DigOneFuncMock(context.Background(), []DigOneResult{
 				{
 					Answers: []string{"www.example.com"},
 					Err:     nil,
@@ -142,7 +142,7 @@ func Test_digVaried(t *testing.T) {
 					Count:        2,
 				},
 			},
-			dig: DigOneFuncMock([]DigOneResult{
+			dig: DigOneFuncMock(context.Background(), []DigOneResult{
 				{
 					Answers: []string{"www.example.com"},
 					Err:     nil,
@@ -168,7 +168,7 @@ func Test_digVaried(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			actual := DigList(tt.params, tt.dig)
+			actual := DigList(context.Background(), tt.params, tt.dig)
 			require.Equal(t, tt.expected, actual)
 		})
 	}

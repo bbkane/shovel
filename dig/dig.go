@@ -18,8 +18,8 @@ type DigOneParams struct {
 	Rtype            uint16
 	NameserverIPPort string
 	SubnetIP         net.IP
-	Timeout          time.Duration
 	Proto            string
+	Timeout          time.Duration
 }
 
 func EmptyDigOneparams() DigOneParams {
@@ -28,21 +28,21 @@ func EmptyDigOneparams() DigOneParams {
 		Rtype:            0,
 		NameserverIPPort: "",
 		SubnetIP:         nil,
-		Timeout:          0,
 		Proto:            "",
+		Timeout:          0,
 	}
 }
 
-type DigOneFunc func(p DigOneParams) ([]string, error)
+type DigOneFunc func(ctx context.Context, p DigOneParams) ([]string, error)
 
 type DigOneResult struct {
 	Answers []string
 	Err     error
 }
 
-func DigOneFuncMock(rets []DigOneResult) DigOneFunc {
+func DigOneFuncMock(_ context.Context, rets []DigOneResult) DigOneFunc {
 	var i int
-	return func(p DigOneParams) ([]string, error) {
+	return func(_ context.Context, p DigOneParams) ([]string, error) {
 		if i >= len(rets) {
 			panic("Ran out of returns!")
 		}
@@ -53,8 +53,9 @@ func DigOneFuncMock(rets []DigOneResult) DigOneFunc {
 }
 
 // DigOne a qname! Returns an error for rcode != NOERROR or an empty list of answers.
-// Returns answers sorted
-func DigOne(p DigOneParams) ([]string, error) {
+// Returns answers sorted alphabetically.
+// If there is both a context deadline and a configured timeout on `DigOneParams`, the earliest of the two takes effect.
+func DigOne(ctx context.Context, p DigOneParams) ([]string, error) {
 	m := new(dns.Msg)
 	m.SetQuestion(dns.Fqdn(p.Qname), p.Rtype)
 
@@ -87,17 +88,12 @@ func DigOne(p DigOneParams) ([]string, error) {
 		m.Extra = append(m.Extra, o)
 	}
 
-	clientCtx, cancel := context.WithTimeout(context.Background(), p.Timeout)
-	defer cancel()
-
-	// in, err := dns.ExchangeContext(clientCtx, m, p.NameserverIPPort)
-
 	client := dns.Client{
 		Net:            p.Proto,
 		UDPSize:        0,
 		TLSConfig:      nil,
 		Dialer:         nil,
-		Timeout:        0,
+		Timeout:        p.Timeout,
 		DialTimeout:    0,
 		ReadTimeout:    0,
 		WriteTimeout:   0,
@@ -105,7 +101,7 @@ func DigOne(p DigOneParams) ([]string, error) {
 		TsigProvider:   nil,
 		SingleInflight: false,
 	}
-	in, _, err := client.ExchangeContext(clientCtx, m, p.NameserverIPPort)
+	in, _, err := client.ExchangeContext(ctx, m, p.NameserverIPPort)
 
 	if err != nil {
 		return nil, fmt.Errorf("exchange err: %w", err)
@@ -152,12 +148,12 @@ type DigRepeatResult struct {
 	Errors  []counter.StringCount
 }
 
-func DigRepeat(p DigRepeatParams, dig DigOneFunc) DigRepeatResult {
+func DigRepeat(ctx context.Context, p DigRepeatParams, dig DigOneFunc) DigRepeatResult {
 	answerCounter := counter.NewStringSliceCounter()
 	errorCounter := counter.NewStringCounter()
 
 	for i := 0; i < p.Count; i++ {
-		answer, err := dig(p.DigOneParams)
+		answer, err := dig(ctx, p.DigOneParams)
 		if err != nil {
 			errorCounter.Add(err.Error())
 		} else {
@@ -170,8 +166,8 @@ func DigRepeat(p DigRepeatParams, dig DigOneFunc) DigRepeatResult {
 	}
 }
 
-func DigList(params []DigRepeatParams, dig DigOneFunc) []DigRepeatResult {
+func DigList(ctx context.Context, params []DigRepeatParams, dig DigOneFunc) []DigRepeatResult {
 	return iter.Map(params, func(p *DigRepeatParams) DigRepeatResult {
-		return DigRepeat(*p, dig)
+		return DigRepeat(ctx, *p, dig)
 	})
 }

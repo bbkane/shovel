@@ -1,6 +1,7 @@
 package diglist
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -90,7 +91,8 @@ func Run(cmdCtx command.Context) error {
 		)
 	}
 
-	dRes := dig.DigList(digRepeatParamsSlice, dig.DigOne)
+	ctx := context.Background()
+	dRes := dig.DigList(ctx, digRepeatParamsSlice, dig.DigOne)
 
 	// convert API result to printable result
 
