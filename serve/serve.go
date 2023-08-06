@@ -4,6 +4,8 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"html/template"
+	"io"
 	"io/fs"
 	"net/http"
 	"net/netip"
@@ -19,6 +21,8 @@ import (
 	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/warg/command"
 )
+
+// -- filesystem
 
 //go:embed static
 var embeddedFiles embed.FS
@@ -43,6 +47,22 @@ func getFileSystem(logger echo.Logger, useDir bool) http.FileSystem {
 	})
 	return http.FS(fsys)
 }
+
+// -- template stuff
+
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
+
+func Hello(c echo.Context) error {
+	return c.Render(http.StatusOK, "hello", "World")
+}
+
+// -- http handlers
 
 func submit(c echo.Context) error {
 	countForm := c.FormValue("count")
@@ -84,6 +104,8 @@ func submit(c echo.Context) error {
 	return c.String(http.StatusOK, fmt.Sprint(res))
 }
 
+// -- Run
+
 func Run(cmdCtx command.Context) error {
 
 	serveStaticFrom := cmdCtx.Flags["--serve-static-from"].(string)
@@ -96,6 +118,12 @@ func Run(cmdCtx command.Context) error {
 
 	e.Use(middleware.Logger())
 	e.Use(LogReqMiddleware())
+
+	t := &Template{
+		// TODO: this still needs to be embedded...
+		templates: template.Must(template.ParseGlob("serve/templates/*.html")),
+	}
+	e.Renderer = t
 
 	assetHandler := http.FileServer(
 		getFileSystem(e.Logger, useDir),
@@ -111,6 +139,8 @@ func Run(cmdCtx command.Context) error {
 		"/submit",
 		submit,
 	)
+
+	e.GET("/hello", Hello)
 
 	e.Logger.Fatal(e.Start(addrPort))
 	return nil
