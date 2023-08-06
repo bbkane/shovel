@@ -261,7 +261,7 @@ func Run(cmdCtx command.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), parsed.GlobalTimeout)
 	defer cancel()
 
-	results := dig.DigList(ctx, parsed.DigRepeatParams, parsed.Dig)
+	results := dig.DigRepeatParallel(ctx, parsed.DigRepeatParams, parsed.Dig)
 
 	t := table.NewWriter()
 	t.SetStyle(table.StyleRounded)

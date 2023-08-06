@@ -92,7 +92,7 @@ func Run(cmdCtx command.Context) error {
 	}
 
 	ctx := context.Background()
-	dRes := dig.DigList(ctx, digRepeatParamsSlice, dig.DigOne)
+	dRes := dig.DigRepeatParallel(ctx, digRepeatParamsSlice, dig.DigOne)
 
 	// convert API result to printable result
 

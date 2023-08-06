@@ -148,6 +148,7 @@ type DigRepeatResult struct {
 	Errors  []counter.StringCount
 }
 
+// DigRepeat runs DigOne multiple times and sums the answers and errors
 func DigRepeat(ctx context.Context, p DigRepeatParams, dig DigOneFunc) DigRepeatResult {
 	answerCounter := counter.NewStringSliceCounter()
 	errorCounter := counter.NewStringCounter()
@@ -166,7 +167,8 @@ func DigRepeat(ctx context.Context, p DigRepeatParams, dig DigOneFunc) DigRepeat
 	}
 }
 
-func DigList(ctx context.Context, params []DigRepeatParams, dig DigOneFunc) []DigRepeatResult {
+// DigRepeatParallel runs DigRepeats in parallel and returns a slice of their results
+func DigRepeatParallel(ctx context.Context, params []DigRepeatParams, dig DigOneFunc) []DigRepeatResult {
 	return iter.Map(params, func(p *DigRepeatParams) DigRepeatResult {
 		return DigRepeat(ctx, *p, dig)
 	})
