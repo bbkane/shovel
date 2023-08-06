@@ -53,8 +53,8 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Alias("-r"),
 		),
 		command.Flag(
-			"--ns",
-			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53 . Set to 'all' to use everything in --ns-map",
+			"--nameserver",
+			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53 . Set to 'all' to use everything in --nameserver-map",
 			slice.String(),
 			flag.ConfigPath("dig.combine.nameservers"),
 			flag.Required(),
@@ -62,8 +62,8 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.UnsetSentinel("UNSET"),
 		),
 		command.Flag(
-			"--ns-map",
-			"Map of name to nameserver IP:port. Can then use names as arguments to --ns",
+			"--nameserver-map",
+			"Map of name to nameserver IP:port. Can then use names as arguments to --nameserver",
 			dict.String(),
 			flag.ConfigPath("dig.combine.nameserver-map"),
 		),

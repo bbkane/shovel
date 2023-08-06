@@ -34,7 +34,7 @@ func TestRunCLI(t *testing.T) {
 				"--count", "1",
 				"--qname", "linkedin.com",
 				"--mock-dig-func", "simple", // don't really dig!
-				"--ns", "0.0.0.0:53",
+				"--nameserver", "0.0.0.0:53",
 				"--rtype", "A",
 			},
 			lookup: warg.LookupMap(nil),
@@ -47,7 +47,7 @@ func TestRunCLI(t *testing.T) {
 				"--count", "2",
 				"--qname", "linkedin.com",
 				"--mock-dig-func", "twocount", // don't really dig!
-				"--ns", "0.0.0.0:53",
+				"--nameserver", "0.0.0.0:53",
 				"--rtype", "A",
 			},
 			lookup: warg.LookupMap(nil),

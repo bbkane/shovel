@@ -137,10 +137,10 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// NOTE: if the wrong types are asserted, the resulting map is nil...
 	// It would be nice if Go was kind enough to panic...
-	nameserverMap, _ := cmdCtx.Flags["--ns-map"].(map[string]string)
+	nameserverMap, _ := cmdCtx.Flags["--nameserver-map"].(map[string]string)
 
 	// These might be names Or IP:Port, so let's not use this slice directly
-	nameserverStrs := cmdCtx.Flags["--ns"].([]string)
+	nameserverStrs := cmdCtx.Flags["--nameserver"].([]string)
 
 	// if --ns all is the only thing passed, add all nameservers from the map
 	if len(nameserverStrs) == 1 && nameserverStrs[0] == "all" && len(nameserverMap) > 0 {
