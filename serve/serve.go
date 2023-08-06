@@ -1,4 +1,4 @@
-package main
+package serve
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"net/netip"
 	"os"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
+	"go.bbkane.com/warg/command"
 )
 
 //go:embed static
@@ -82,8 +84,12 @@ func submit(c echo.Context) error {
 	return c.String(http.StatusOK, fmt.Sprint(res))
 }
 
-func main() {
-	useDir := len(os.Args) > 1 && os.Args[1] == "useDir"
+func Run(cmdCtx command.Context) error {
+
+	serveStaticFrom := cmdCtx.Flags["--serve-static-from"].(string)
+	addrPort := cmdCtx.Flags["--address"].(netip.AddrPort).String()
+
+	useDir := serveStaticFrom == "dir" // only tww choices so this is ok...
 
 	e := echo.New()
 	e.Logger.SetLevel(log.DEBUG)
@@ -106,5 +112,6 @@ func main() {
 		submit,
 	)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(addrPort))
+	return nil
 }

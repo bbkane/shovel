@@ -1,11 +1,13 @@
 package main
 
 import (
+	"net/netip"
 	"os"
 	"time"
 
 	"go.bbkane.com/shovel/digcombine"
 	"go.bbkane.com/shovel/diglist"
+	"go.bbkane.com/shovel/serve"
 	"go.bbkane.com/warg"
 	"go.bbkane.com/warg/command"
 	"go.bbkane.com/warg/config/yamlreader"
@@ -189,6 +191,33 @@ func digListCmd(digFooter string) command.Command {
 	)
 }
 
+func serveCmd(digFooter string) command.Command {
+	return command.New(
+		"Run dig commands remotely",
+		serve.Run,
+		command.Footer(digFooter),
+		command.Flag(
+			"--serve-static-from",
+			"Mode to serve static files",
+			scalar.String(
+				scalar.Choices("dir", "embedded"),
+				scalar.Default("embedded"),
+			),
+			flag.Required(),
+			flag.ConfigPath("serve.serve-static-from"),
+		),
+		command.Flag(
+			"--address",
+			"Address + Port to serve from",
+			scalar.AddrPort(
+				scalar.Default(netip.MustParseAddrPort("127.0.0.1:8080")),
+			),
+			flag.Required(),
+			flag.ConfigPath("serve.address"),
+		),
+	)
+}
+
 func buildApp() warg.App {
 	digFooter := `Homepage: https://github.com/bbkane/shovel
 Examples: https://github.com/bbkane/shovel/blob/master/examples.md
@@ -209,6 +238,10 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 					"list",
 					digListCmd(digFooter),
 				),
+			),
+			section.ExistingCommand(
+				"serve",
+				serveCmd(digFooter),
 			),
 			section.Footer(digFooter),
 		),
