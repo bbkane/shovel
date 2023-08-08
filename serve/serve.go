@@ -114,6 +114,7 @@ func Run(cmdCtx command.Context) error {
 	useDir := serveStaticFrom == "dir" // only tww choices so this is ok...
 
 	e := echo.New()
+	e.HideBanner = true
 	e.Logger.SetLevel(log.DEBUG)
 
 	e.Use(middleware.Logger())
