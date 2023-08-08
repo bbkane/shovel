@@ -17,14 +17,19 @@
             </tr>
         </thead>
         <tbody>
+            {{ range .Answers }}
             <tr>
-                <td>www.linkedin.cn</td>
-                <td>Y</td>
+                <td>{{ .StringSlice }}</td>
+                <td>{{ .Count }}</td>
             </tr>
+            {{ end }}
+
+            {{ range .Errors }}
             <tr>
-                <td>www-linkedin-com</td>
-                <td>Y</td>
+                <td>{{ .String }}</td>
+                <td>{{ .Count }}</td>
             </tr>
+            {{ end }}
         </tbody>
     </table>
 </body>
