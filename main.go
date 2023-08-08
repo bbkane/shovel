@@ -197,16 +197,6 @@ func serveCmd(digFooter string) command.Command {
 		serve.Run,
 		command.Footer(digFooter),
 		command.Flag(
-			"--serve-static-from",
-			"Mode to serve static files",
-			scalar.String(
-				scalar.Choices("dir", "embedded"),
-				scalar.Default("embedded"),
-			),
-			flag.Required(),
-			flag.ConfigPath("serve.serve-static-from"),
-		),
-		command.Flag(
 			"--address",
 			"Address + Port to serve from",
 			scalar.AddrPort(

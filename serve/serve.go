@@ -6,10 +6,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/fs"
 	"net/http"
 	"net/netip"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -27,27 +25,6 @@ import (
 //go:embed static
 var embeddedFiles embed.FS
 
-func getFileSystem(logger echo.Logger, useDir bool) http.FileSystem {
-	var fsys fs.FS
-	var mode string
-	if useDir {
-		fsys = os.DirFS("static")
-		mode = "dir"
-	} else {
-		var err error
-		fsys, err = fs.Sub(embeddedFiles, "static")
-		if err != nil {
-			panic(err)
-		}
-		mode = "embedded"
-	}
-	logger.Debugj(log.JSON{
-		"message": "static serve mode",
-		"mode":    mode,
-	})
-	return http.FS(fsys)
-}
-
 // -- template stuff
 
 type Template struct {
@@ -55,10 +32,17 @@ type Template struct {
 }
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
+	// I would like to pass errors up to the caller, but the echo v4 framework
+	// silently swallows this function returns :(
+	err := t.templates.ExecuteTemplate(w, name, data)
+	if err != nil {
+		panic(err)
+	}
+	return nil
 }
 
 func Hello(c echo.Context) error {
+	// NOTE that because
 	return c.Render(http.StatusOK, "hello", "World")
 }
 
@@ -108,10 +92,7 @@ func submit(c echo.Context) error {
 
 func Run(cmdCtx command.Context) error {
 
-	serveStaticFrom := cmdCtx.Flags["--serve-static-from"].(string)
 	addrPort := cmdCtx.Flags["--address"].(netip.AddrPort).String()
-
-	useDir := serveStaticFrom == "dir" // only tww choices so this is ok...
 
 	e := echo.New()
 	e.HideBanner = true
@@ -120,20 +101,24 @@ func Run(cmdCtx command.Context) error {
 	e.Use(middleware.Logger())
 	e.Use(LogReqMiddleware())
 
+	temp, err := template.ParseFS(embeddedFiles, "static/templates/*.html")
+	if err != nil {
+		return fmt.Errorf("could not parse embedded template files: %w", err)
+	}
 	t := &Template{
-		// TODO: this still needs to be embedded...
-		templates: template.Must(template.ParseGlob("serve/templates/*.html")),
+		templates: temp,
 	}
 	e.Renderer = t
 
-	assetHandler := http.FileServer(
-		getFileSystem(e.Logger, useDir),
-	)
 	e.GET(
-		"/static/*",
-		echo.WrapHandler(
-			http.StripPrefix("/static/", assetHandler),
-		),
+		"/",
+		func(c echo.Context) error {
+			file, err := embeddedFiles.ReadFile("static/form.html")
+			if err != nil {
+				panic("oopsies bad fs path: " + err.Error())
+			}
+			return c.HTMLBlob(http.StatusOK, file)
+		},
 	)
 
 	e.GET(
