@@ -67,7 +67,7 @@ func submit(c echo.Context) error {
 		panic(err)
 	}
 
-	_ = dig.DigRepeat(
+	res := dig.DigRepeat(
 		context.Background(),
 		dig.DigRepeatParams{
 			DigOneParams: dig.DigOneParams{
@@ -82,7 +82,7 @@ func submit(c echo.Context) error {
 		},
 		dig.DigOne,
 	)
-	return c.Render(http.StatusOK, "submit.html", "World")
+	return c.Render(http.StatusOK, "submit.html", res)
 }
 
 // -- Run
