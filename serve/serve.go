@@ -33,17 +33,15 @@ type Template struct {
 
 func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 	// I would like to pass errors up to the caller, but the echo v4 framework
-	// silently swallows this function returns :(
+	// silently swallows any error this function would return :(
+
+	// an error for template not found is:
+	// >> echo: http: panic serving 127.0.0.1:53382: html/template: "submit" is undefined
 	err := t.templates.ExecuteTemplate(w, name, data)
 	if err != nil {
 		panic(err)
 	}
 	return nil
-}
-
-func Hello(c echo.Context) error {
-	// NOTE that because
-	return c.Render(http.StatusOK, "hello", "World")
 }
 
 // -- http handlers
@@ -69,7 +67,7 @@ func submit(c echo.Context) error {
 		panic(err)
 	}
 
-	res := dig.DigRepeat(
+	_ = dig.DigRepeat(
 		context.Background(),
 		dig.DigRepeatParams{
 			DigOneParams: dig.DigOneParams{
@@ -84,8 +82,7 @@ func submit(c echo.Context) error {
 		},
 		dig.DigOne,
 	)
-
-	return c.String(http.StatusOK, fmt.Sprint(res))
+	return c.Render(http.StatusOK, "submit.html", "World")
 }
 
 // -- Run
@@ -125,8 +122,6 @@ func Run(cmdCtx command.Context) error {
 		"/submit",
 		submit,
 	)
-
-	e.GET("/hello", Hello)
 
 	e.Logger.Fatal(e.Start(addrPort))
 	return nil
