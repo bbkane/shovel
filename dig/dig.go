@@ -125,6 +125,10 @@ func DigOne(ctx context.Context, p DigOneParams) ([]string, error) {
 			answers = append(answers, t.AAAA.String())
 		case *dns.CNAME:
 			answers = append(answers, t.Target)
+		case *dns.MX:
+			answers = append(answers, t.Mx)
+		case *dns.NS:
+			answers = append(answers, t.Ns)
 		case *dns.TXT:
 			// NOTE: the dns lib has a MUCH fancier private way to do this
 			// Maybe I should copy that :)

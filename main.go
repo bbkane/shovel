@@ -46,7 +46,7 @@ func digCombineCmd(digFooter string) command.Command {
 			"Record types",
 			slice.String(
 				slice.Default([]string{"A"}),
-				slice.Choices("A", "AAAA", "CNAME", "TXT"),
+				slice.Choices("A", "AAAA", "CNAME", "MX", "NS", "TXT"),
 			),
 			flag.ConfigPath("dig.combine.rtypes"),
 			flag.Required(),
@@ -164,7 +164,7 @@ func digListCmd(digFooter string) command.Command {
 			"--rtype",
 			"Record types",
 			slice.String(
-				slice.Choices("A", "AAAA", "CNAME", "TXT"),
+				slice.Choices("A", "AAAA", "CNAME", "MX", "NS", "TXT"),
 			),
 			flag.ConfigPath("dig.list[].rtype"),
 			flag.Required(),
