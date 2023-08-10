@@ -12,24 +12,43 @@
     <table>
         <thead>
             <tr>
-                <th>Ans/Err<br></th>
-                <th>Count<br></th>
+                <th>Qname</th>
+                <th>Rtype</th>
+                <th>Nameserver</th>
+                <th>Ans/Err</th>
+                <th>Count</th>
             </tr>
         </thead>
         <tbody>
-            {{ range .Answers }}
+            {{ $params := .Params }}
+
+            {{ $results := .Results }}
+            {{ range $idx, $e := .Params }}
+
+            {{ $param := (index $params $idx) }}
+            {{ $result := (index $results $idx) }}
+
+
             <tr>
+                <td> {{ $param.DigOneParams.Qname }} </td>
+                <td>{{ $param.DigOneParams.Rtype }}</td>
+                <td>{{ $param.DigOneParams.NameserverIPPort }}</td>
+                {{ range $result.Answers }}
                 <td>{{ .StringSlice }}</td>
                 <td>{{ .Count }}</td>
-            </tr>
-            {{ end }}
-
-            {{ range .Errors }}
+                {{ end}}
+                {{ range $result.Errors }}
             <tr>
+                <td> {{ $param.DigOneParams.Qname }} </td>
+                <td>{{ $param.DigOneParams.Rtype }}</td>
+                <td>{{ $param.DigOneParams.NameserverIPPort }}</td>
                 <td>{{ .String }}</td>
                 <td>{{ .Count }}</td>
             </tr>
             {{ end }}
+            </tr>
+
+            {{ end}}
         </tbody>
     </table>
 </body>

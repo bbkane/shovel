@@ -72,12 +72,24 @@ func getDigFunc(name string) dig.DigOneFunc {
 }
 
 type parsedCmdCtx struct {
+	Dig             dig.DigOneFunc
 	DigRepeatParams []dig.DigRepeatParams
 	GlobalTimeout   time.Duration
 	NameserverNames map[string]string
-	SubnetNames     map[string]string
-	Dig             dig.DigOneFunc
 	Stdout          *os.File
+	SubnetNames     map[string]string
+}
+
+func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
+	var rtypes []uint16
+	for _, rtypeStr := range rtypeStrs {
+		rtype, ok := dns.StringToType[rtypeStr]
+		if !ok {
+			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+		}
+		rtypes = append(rtypes, rtype)
+	}
+	return rtypes, nil
 }
 
 func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
@@ -90,13 +102,9 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// rtypes
 	rtypeStrs := cmdCtx.Flags["--rtype"].([]string)
-	var rtypes []uint16
-	for _, rtypeStr := range rtypeStrs {
-		rtype, ok := dns.StringToType[rtypeStr]
-		if !ok {
-			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
-		}
-		rtypes = append(rtypes, rtype)
+	rtypes, err := ConvertRTypes(rtypeStrs)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't parse cmdCtx: %w", err)
 	}
 
 	mockDigFuncStr := cmdCtx.Flags["--mock-dig-func"].(string)
@@ -172,35 +180,22 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		return nil, errors.New("no nameservers passed")
 	}
 
-	digRepeatParamsSlice := []dig.DigRepeatParams{}
-
-	for _, qname := range qnames {
-		for _, rtype := range rtypes {
-			for _, subnet := range subnets {
-				for _, nameserver := range nameservers {
-					digRepeatParamsSlice = append(digRepeatParamsSlice, dig.DigRepeatParams{
-						DigOneParams: dig.DigOneParams{
-							Qname:            qname,
-							Rtype:            rtype,
-							NameserverIPPort: nameserver,
-							SubnetIP:         subnet,
-							Timeout:          0, // TODO: implement per-dig timeouts
-							Proto:            proto,
-						},
-						Count: count,
-					})
-				}
-			}
-		}
-	}
+	digRepeatParamsSlice := dig.CombineDigRepeatParams(
+		nameservers,
+		proto,
+		qnames,
+		rtypes,
+		subnets,
+		count,
+	)
 
 	return &parsedCmdCtx{
-		DigRepeatParams: digRepeatParamsSlice,
-		NameserverNames: nameserverNames,
-		SubnetNames:     subnetNames,
 		Dig:             digFunc,
-		Stdout:          cmdCtx.Stdout,
+		DigRepeatParams: digRepeatParamsSlice,
 		GlobalTimeout:   globalTimeout,
+		NameserverNames: nameserverNames,
+		Stdout:          cmdCtx.Stdout,
+		SubnetNames:     subnetNames,
 	}, nil
 }
 

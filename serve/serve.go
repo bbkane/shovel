@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net"
 	"net/http"
 	"net/netip"
 	"strconv"
@@ -15,8 +16,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
+	"go.bbkane.com/shovel/digcombine"
 	"go.bbkane.com/warg/command"
 )
 
@@ -47,13 +48,15 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 // -- http handlers
 
 func submit(c echo.Context) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
 	countForm := c.FormValue("count")
 	qnames := strings.Split(c.FormValue("qnames"), " ")
 	nameservers := strings.Split(c.FormValue("nameservers"), " ")
-	protocols := strings.Split(c.FormValue("protocols"), " ")
-	rtypes := strings.Split(c.FormValue("rtypes"), " ")
+	proto := c.FormValue("protocol")
+	rtypeStrs := strings.Split(c.FormValue("rtypes"), " ")
 	// subnets := strings.Split(c.FormValue("subnets"), " ")
-	timeout := c.FormValue("timeout")
 
 	// TODO: validate all of this or else I'mma be panicking!
 
@@ -62,27 +65,34 @@ func submit(c echo.Context) error {
 		panic(err)
 	}
 
-	parsedTimeout, err := time.ParseDuration(timeout)
+	rtypes, err := digcombine.ConvertRTypes(rtypeStrs)
 	if err != nil {
 		panic(err)
 	}
 
-	res := dig.DigRepeat(
-		context.Background(),
-		dig.DigRepeatParams{
-			DigOneParams: dig.DigOneParams{
-				Qname:            qnames[0],
-				Rtype:            dns.StringToType[rtypes[0]],
-				NameserverIPPort: nameservers[0],
-				SubnetIP:         nil, // TODO: get from form
-				Timeout:          parsedTimeout,
-				Proto:            protocols[0],
-			},
-			Count: count,
-		},
-		dig.DigOne,
+	params := dig.CombineDigRepeatParams(
+		nameservers,
+		proto,
+		qnames,
+		rtypes,
+		[]net.IP{nil}, // TOOD: subnets
+		count,
 	)
-	return c.Render(http.StatusOK, "submit.html", res)
+	fmt.Println(params)
+
+	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
+
+	submitData := struct {
+		Params  []dig.DigRepeatParams
+		Results []dig.DigRepeatResult
+	}{
+		Params:  params,
+		Results: resMul,
+	}
+
+	fmt.Println(submitData)
+
+	return c.Render(http.StatusOK, "submit.html", submitData)
 }
 
 // -- Run

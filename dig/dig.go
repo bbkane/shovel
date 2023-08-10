@@ -14,21 +14,21 @@ import (
 )
 
 type DigOneParams struct {
+	NameserverIPPort string
+	Proto            string
 	Qname            string
 	Rtype            uint16
-	NameserverIPPort string
 	SubnetIP         net.IP
-	Proto            string
 	Timeout          time.Duration
 }
 
 func EmptyDigOneparams() DigOneParams {
 	return DigOneParams{
+		NameserverIPPort: "",
+		Proto:            "",
 		Qname:            "",
 		Rtype:            0,
-		NameserverIPPort: "",
 		SubnetIP:         nil,
-		Proto:            "",
 		Timeout:          0,
 	}
 }
@@ -169,6 +169,33 @@ func DigRepeat(ctx context.Context, p DigRepeatParams, dig DigOneFunc) DigRepeat
 		Answers: answerCounter.AsSortedSlice(),
 		Errors:  errorCounter.AsSortedSlice(),
 	}
+}
+
+// CombineDigRepeatParams combines all the slcies passed. Ensure all of them have a length > 0
+func CombineDigRepeatParams(nameservers []string, proto string, qnames []string, rtypes []uint16, subnets []net.IP, count int) []DigRepeatParams {
+	// TODO: range over protos
+	digRepeatParamsSlice := []DigRepeatParams{}
+
+	for _, qname := range qnames {
+		for _, rtype := range rtypes {
+			for _, subnet := range subnets {
+				for _, nameserver := range nameservers {
+					digRepeatParamsSlice = append(digRepeatParamsSlice, DigRepeatParams{
+						DigOneParams: DigOneParams{
+							NameserverIPPort: nameserver,
+							Proto:            proto,
+							Qname:            qname,
+							Rtype:            rtype,
+							SubnetIP:         subnet,
+							Timeout:          0, // TODO: implement per-dig timeouts
+						},
+						Count: count,
+					})
+				}
+			}
+		}
+	}
+	return digRepeatParamsSlice
 }
 
 // DigRepeatParallel runs DigRepeats in parallel and returns a slice of their results
