@@ -78,7 +78,6 @@ func submit(c echo.Context) error {
 		[]net.IP{nil}, // TOOD: subnets
 		count,
 	)
-	fmt.Println(params)
 
 	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
 
@@ -92,7 +91,73 @@ func submit(c echo.Context) error {
 
 	fmt.Println(submitData)
 
-	return c.Render(http.StatusOK, "submit.html", submitData)
+	// new fake data stuff yay!
+
+	type TdData struct {
+		Content string
+		Rowspan int
+	}
+	type AnsErrCount struct {
+		AnsErrs []string
+		Count   int
+	}
+	type AnsErrCountSlice struct {
+		AnsErrCounts []AnsErrCount
+	}
+
+	tableData := struct {
+		Qnames       []TdData
+		Rtypes       []TdData
+		Nameservers  []TdData
+		AnsErrCounts []AnsErrCountSlice
+	}{
+		Qnames: []TdData{
+			TdData{
+				Content: "www.linkedin.com ",
+				Rowspan: 2,
+			},
+		},
+		Rtypes: []TdData{
+			TdData{
+				Content: "A",
+				Rowspan: 2,
+			},
+		},
+		Nameservers: []TdData{
+			TdData{
+				Content: "dns3.p09.nsone.net:53",
+				Rowspan: 1,
+			},
+			TdData{
+				Content: "ns3-42.azure-dns.org:53",
+				Rowspan: 1,
+			},
+		},
+		AnsErrCounts: []AnsErrCountSlice{
+			AnsErrCountSlice{
+				AnsErrCounts: []AnsErrCount{
+					AnsErrCount{
+						AnsErrs: []string{"www-linkedin-com.l-0005.l-msedge.net.", " other.cname.somehow"},
+						Count:   9,
+					},
+					AnsErrCount{
+						AnsErrs: []string{"exchange err: dial tcp: lookup dns1.p09.nsone.net.: i/o timeout"},
+						Count:   1,
+					},
+				},
+			},
+			AnsErrCountSlice{
+				AnsErrCounts: []AnsErrCount{
+					AnsErrCount{
+						AnsErrs: []string{"www.linkedin.cn."},
+						Count:   10,
+					},
+				},
+			},
+		},
+	}
+
+	return c.Render(http.StatusOK, "submit2.html", tableData)
 }
 
 // -- Run
@@ -125,6 +190,16 @@ func Run(cmdCtx command.Context) error {
 				panic("oopsies bad fs path: " + err.Error())
 			}
 			return c.HTMLBlob(http.StatusOK, file)
+		},
+	)
+	e.GET(
+		"/static/index.css",
+		func(c echo.Context) error {
+			file, err := embeddedFiles.ReadFile("static/index.css")
+			if err != nil {
+				panic("oopsies bad fs path: " + err.Error())
+			}
+			return c.Blob(http.StatusOK, "text/css", file)
 		},
 	)
 

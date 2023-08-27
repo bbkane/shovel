@@ -1,0 +1,27 @@
+h1 {
+    text-align: center;
+}
+
+form {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 5px;
+}
+
+form label {
+    text-align: right;
+}
+
+table {
+    table-layout: auto;
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+thead th,
+tbody td {
+    text-align: center;
+    border: 1px solid black;
+    padding: 5px;
+}

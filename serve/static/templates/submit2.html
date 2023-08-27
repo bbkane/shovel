@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Results</title>
+    <link rel="stylesheet" href="/static/index.css" type="text/css">
+</head>
+
+<body>
+    <h1>Results</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Qname</th>
+                <th>Rtype</th>
+                <th>Nameserver</th>
+                <th>Ans/Err with Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $q := .Qnames}}
+            <tr>
+                <td rowspan="{{$q.Rowspan}}">{{$q.Content}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</body>
+
+</html>
