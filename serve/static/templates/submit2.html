@@ -19,14 +19,10 @@
         </thead>
         <tbody>
             {{ $td := .}}
-            {{range $q := $td.Qnames}}
+            {{range $row := $td.Rows}}
             <tr>
-                <td rowspan="{{$q.Rowspan}}">{{$q.Content}}</td>
-                {{range $r := $td.Rtypes }}
-                <td rowspan="{{$r.Rowspan}}">{{$r.Content}}</td>
-                {{range $n := $td.Nameservers }}
-                <td rowspan="{{$n.Rowspan}}">{{$n.Content}}</td>
-                {{end}}
+                {{range $col := $row.Columns}}
+                <td rowspan="{{$col.Rowspan}}">{{$col.Content}}</td>
                 {{end}}
             </tr>
             {{end}}
