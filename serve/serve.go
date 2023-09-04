@@ -106,8 +106,8 @@ func submit(c echo.Context) error {
 	}
 
 	type Row struct {
-		Columns []TdData
-		AnsErrs []AnsErrCountSlice
+		Columns      []TdData
+		AnsErrCounts []AnsErrCountSlice
 	}
 	type Table struct {
 		Rows []Row
@@ -121,7 +121,28 @@ func submit(c echo.Context) error {
 					TdData{Content: "A", Rowspan: 2},
 					TdData{Content: "dns3.p09.nsone.net:53", Rowspan: 1},
 				},
-				AnsErrs: []AnsErrCountSlice{},
+				AnsErrCounts: []AnsErrCountSlice{
+					AnsErrCountSlice{
+						AnsErrCounts: []AnsErrCount{
+							AnsErrCount{
+								AnsErrs: []string{"www-linkedin-com.l-0005.l-msedge.net.", " other.cname.somehow"},
+								Count:   9,
+							},
+							AnsErrCount{
+								AnsErrs: []string{"exchange err: dial tcp: lookup dns1.p09.nsone.net.: i/o timeout"},
+								Count:   1,
+							},
+						},
+					},
+					AnsErrCountSlice{
+						AnsErrCounts: []AnsErrCount{
+							AnsErrCount{
+								AnsErrs: []string{"www.linkedin.cn."},
+								Count:   10,
+							},
+						},
+					},
+				},
 			},
 			Row{
 				Columns: []TdData{
