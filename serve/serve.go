@@ -101,13 +101,10 @@ func submit(c echo.Context) error {
 		AnsErrs []string
 		Count   int
 	}
-	type AnsErrCountSlice struct {
-		AnsErrCounts []AnsErrCount
-	}
 
 	type Row struct {
 		Columns      []TdData
-		AnsErrCounts []AnsErrCountSlice
+		AnsErrCounts []AnsErrCount
 	}
 	type Table struct {
 		Rows []Row
@@ -115,38 +112,32 @@ func submit(c echo.Context) error {
 
 	table := Table{
 		Rows: []Row{
-			Row{
+			{
 				Columns: []TdData{
-					TdData{Content: "www.linkedin.com", Rowspan: 2},
-					TdData{Content: "A", Rowspan: 2},
-					TdData{Content: "dns3.p09.nsone.net:53", Rowspan: 1},
+					{Content: "www.linkedin.com", Rowspan: 2},
+					{Content: "A", Rowspan: 2},
+					{Content: "dns3.p09.nsone.net:53", Rowspan: 1},
 				},
-				AnsErrCounts: []AnsErrCountSlice{
-					AnsErrCountSlice{
-						AnsErrCounts: []AnsErrCount{
-							AnsErrCount{
-								AnsErrs: []string{"www-linkedin-com.l-0005.l-msedge.net.", " other.cname.somehow"},
-								Count:   9,
-							},
-							AnsErrCount{
-								AnsErrs: []string{"exchange err: dial tcp: lookup dns1.p09.nsone.net.: i/o timeout"},
-								Count:   1,
-							},
-						},
+				AnsErrCounts: []AnsErrCount{
+					{
+						AnsErrs: []string{"firstline", "secondline"},
+						Count:   9,
 					},
-					AnsErrCountSlice{
-						AnsErrCounts: []AnsErrCount{
-							AnsErrCount{
-								AnsErrs: []string{"www.linkedin.cn."},
-								Count:   10,
-							},
-						},
+					{
+						AnsErrs: []string{"error"},
+						Count:   1,
 					},
 				},
 			},
-			Row{
+			{
 				Columns: []TdData{
-					TdData{Content: "ns3-42.azure-dns.org:53", Rowspan: 1},
+					{Content: "ns3-42.azure-dns.org:53", Rowspan: 1},
+				},
+				AnsErrCounts: []AnsErrCount{
+					{
+						AnsErrs: []string{"firstline", "secondline"},
+						Count:   9,
+					},
 				},
 			},
 		},
@@ -168,7 +159,9 @@ func Run(cmdCtx command.Context) error {
 	e.Use(middleware.Logger())
 	e.Use(LogReqMiddleware())
 
-	temp, err := template.ParseFS(embeddedFiles, "static/templates/*.html")
+	temp, err := template.New("").
+		Funcs(template.FuncMap{}).
+		ParseFS(embeddedFiles, "static/templates/*.html")
 	if err != nil {
 		return fmt.Errorf("could not parse embedded template files: %w", err)
 	}

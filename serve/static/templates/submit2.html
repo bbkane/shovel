@@ -24,6 +24,21 @@
                 {{range $col := $row.Columns}}
                 <td rowspan="{{$col.Rowspan}}">{{$col.Content}}</td>
                 {{end}}
+                <td>
+                    <table>
+                        {{range $aec := $row.AnsErrCounts}}
+                        <tr>
+                            <td>
+                                {{ range $index, $ae := $aec.AnsErrs }}
+                                {{if $index}}<br>{{end}}
+                                {{$ae}}
+                                {{end}}
+                            </td>
+                            <td>{{ $aec.Count }}</td>
+                        </tr>
+                        {{end}}
+                    </table>
+                </td>
             </tr>
             {{end}}
         </tbody>
