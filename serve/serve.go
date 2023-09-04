@@ -81,18 +81,6 @@ func submit(c echo.Context) error {
 
 	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
 
-	submitData := struct {
-		Params  []dig.DigRepeatParams
-		Results []dig.DigRepeatResult
-	}{
-		Params:  params,
-		Results: resMul,
-	}
-
-	fmt.Println(submitData)
-
-	// new fake data stuff yay!
-
 	type TdData struct {
 		Content string
 		Rowspan int
@@ -110,40 +98,65 @@ func submit(c echo.Context) error {
 		Rows []Row
 	}
 
-	table := Table{
-		Rows: []Row{
-			{
-				Columns: []TdData{
-					{Content: "www.linkedin.com", Rowspan: 2},
-					{Content: "A", Rowspan: 2},
-					{Content: "dns3.p09.nsone.net:53", Rowspan: 1},
-				},
-				AnsErrCounts: []AnsErrCount{
-					{
-						AnsErrs: []string{"firstline", "secondline"},
-						Count:   9,
-					},
-					{
-						AnsErrs: []string{"error"},
-						Count:   1,
-					},
-				},
-			},
-			{
-				Columns: []TdData{
-					{Content: "ns3-42.azure-dns.org:53", Rowspan: 1},
-				},
-				AnsErrCounts: []AnsErrCount{
-					{
-						AnsErrs: []string{"firstline", "secondline"},
-						Count:   9,
-					},
-				},
-			},
-		},
+	// Add params to output table
+	qLen := len(qnames)
+	rLen := len(rtypes)
+	nLen := len(nameservers)
+	rows := qLen * rLen * nLen
+	t := Table{
+		Rows: make([]Row, rows),
 	}
 
-	return c.Render(http.StatusOK, "submit2.html", table)
+	qWidth := rows / qLen
+	{
+		i := 0
+		for r := 0; r < rows; r += qWidth {
+			td := TdData{Content: qnames[i%qLen], Rowspan: qWidth}
+			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			i++
+		}
+	}
+
+	rWidth := qWidth / rLen
+	{
+		i := 0
+		for r := 0; r < rows; r += rWidth {
+			td := TdData{Content: rtypeStrs[i%rLen], Rowspan: rWidth}
+			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			i++
+		}
+	}
+
+	nWidth := rWidth / nLen
+	{
+		i := 0
+		for r := 0; r < rows; r += nWidth {
+			td := TdData{Content: nameservers[i%nLen], Rowspan: nWidth}
+			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			i++
+		}
+	}
+
+	// Add anserrs to table
+	for i, r := range resMul {
+		aecs := []AnsErrCount{}
+		for _, a := range r.Answers {
+			aecs = append(
+				aecs,
+				AnsErrCount{AnsErrs: a.StringSlice, Count: a.Count},
+			)
+		}
+		for _, e := range r.Errors {
+			aecs = append(
+				aecs,
+				AnsErrCount{AnsErrs: []string{e.String}, Count: e.Count},
+			)
+		}
+		t.Rows[i].AnsErrCounts = aecs
+
+	}
+
+	return c.Render(http.StatusOK, "submit2.html", t)
 }
 
 // -- Run
