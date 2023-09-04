@@ -18,9 +18,16 @@
             </tr>
         </thead>
         <tbody>
-            {{range $q := .Qnames}}
+            {{ $td := .}}
+            {{range $q := $td.Qnames}}
             <tr>
                 <td rowspan="{{$q.Rowspan}}">{{$q.Content}}</td>
+                {{range $r := $td.Rtypes }}
+                <td rowspan="{{$r.Rowspan}}">{{$r.Content}}</td>
+                {{range $n := $td.Nameservers }}
+                <td rowspan="{{$n.Rowspan}}">{{$n.Content}}</td>
+                {{end}}
+                {{end}}
             </tr>
             {{end}}
         </tbody>
