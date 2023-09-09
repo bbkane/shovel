@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"net"
 	"net/http"
 	"net/netip"
 	"strconv"
@@ -56,7 +55,7 @@ func submit(c echo.Context) error {
 	nameservers := strings.Split(c.FormValue("nameservers"), " ")
 	proto := c.FormValue("protocol")
 	rtypeStrs := strings.Split(c.FormValue("rtypes"), " ")
-	// subnets := strings.Split(c.FormValue("subnets"), " ")
+	subnets := strings.Split(c.FormValue("subnets"), " ")
 
 	// TODO: validate all of this or else I'mma be panicking!
 
@@ -70,12 +69,17 @@ func submit(c echo.Context) error {
 		panic(err)
 	}
 
+	parsedSubnets, subnetToName, err := digcombine.ParseSubnets(subnets, nil)
+	if err != nil {
+		panic(err)
+	}
+
 	params := dig.CombineDigRepeatParams(
 		nameservers,
 		proto,
 		qnames,
 		rtypes,
-		[]net.IP{nil}, // TOOD: subnets
+		parsedSubnets,
 		count,
 	)
 
@@ -101,8 +105,9 @@ func submit(c echo.Context) error {
 	// Add params to output table
 	qLen := len(qnames)
 	rLen := len(rtypes)
+	sLen := len(parsedSubnets)
 	nLen := len(nameservers)
-	rows := qLen * rLen * nLen
+	rows := qLen * rLen * sLen * nLen
 	t := Table{
 		Rows: make([]Row, rows),
 	}
@@ -127,7 +132,20 @@ func submit(c echo.Context) error {
 		}
 	}
 
-	nWidth := rWidth / nLen
+	sWidth := rWidth / sLen
+	{
+		i := 0
+		for r := 0; r < rows; r += sWidth {
+			parsedSubnetStr := parsedSubnets[i%sLen].String()
+			content := parsedSubnetStr + "(" + subnetToName[parsedSubnetStr] + ")"
+
+			td := TdData{Content: content, Rowspan: sWidth}
+			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			i++
+		}
+	}
+
+	nWidth := sWidth / nLen
 	{
 		i := 0
 		for r := 0; r < rows; r += nWidth {
