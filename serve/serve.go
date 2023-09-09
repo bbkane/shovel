@@ -203,6 +203,16 @@ func Run(cmdCtx command.Context) error {
 			return c.Blob(http.StatusOK, "text/css", file)
 		},
 	)
+	e.GET(
+		"/static/3p/htmx.org@1.9.5/dist/htmx.min.js",
+		func(c echo.Context) error {
+			file, err := embeddedFiles.ReadFile("static/3p/htmx.org@1.9.5/dist/htmx.min.js")
+			if err != nil {
+				panic("oopsies bad fs path: " + err.Error())
+			}
+			return c.Blob(http.StatusOK, "application/javascript; charset=UTF-8", file)
+		},
+	)
 
 	e.GET(
 		"/submit",

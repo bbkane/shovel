@@ -7,14 +7,12 @@
   <title>Shovel</title>
   <link rel="stylesheet" href="/static/index.css" type="text/css">
 
-  <script src="https://unpkg.com/htmx.org@1.9.5"
-    integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO"
-    crossorigin="anonymous"></script>
+  <script src="/static/3p/htmx.org@1.9.5/dist/htmx.min.js"></script>
 </head>
 
 <body>
   <h1>Shovel</h1>
-  <form action="/submit" method="get">
+  <form hx-get="/submit" hx-target="#results" hx-swap="outerHTML">
 
     <label for="count">count</label>
     <input type="text" id="count" name="count" required="true" value="10" />
