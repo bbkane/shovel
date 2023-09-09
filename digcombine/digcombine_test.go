@@ -161,7 +161,8 @@ func Test_parseCmdCtx(t *testing.T) {
 			name:   "badNSPassedAsArg",
 			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"badns"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
-			expectedErr: true,
+			expectedErr:    true,
+			expectedParsed: nil,
 		},
 		{
 			name:   "nsFromMap",
@@ -242,10 +243,10 @@ func Test_parseCmdCtx(t *testing.T) {
 			},
 		},
 		{
-			name:   "namedNameserverErr",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"dns1.p09.nsone.net.53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: true,
+			name:           "namedNameserverErr",
+			cmdCtx:         command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"dns1.p09.nsone.net.53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			expectedErr:    true,
+			expectedParsed: nil,
 		},
 	}
 	for _, tt := range tests {

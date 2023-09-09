@@ -270,6 +270,7 @@ func Run(cmdCtx command.Context) error {
 	// we can assume the rest are too. If so, hide the count column
 	hideCount := parsed.DigRepeatParams[0].Count == 1
 
+	//nolint:exhaustruct
 	columnConfigs := []table.ColumnConfig{
 		{Name: "Qname", AutoMerge: true},
 		{Name: "Rtype", AutoMerge: true},
