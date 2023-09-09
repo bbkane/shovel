@@ -61,7 +61,7 @@ type parsedCmdCtx struct {
 	GlobalTimeout   time.Duration
 	NameserverNames map[string]string
 	Stdout          *os.File
-	SubnetNames     map[string]string
+	SubnetToName    map[string]string
 }
 
 func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
@@ -76,7 +76,8 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 	return rtypes, nil
 }
 
-// parseSubnets turns a list of passed subnets into a list of net.IP
+// ParseSubnets turns a list of passed subnets into a list of net.IP for digging,
+// a map of stringified subnet to name, and an error.
 // It uses the following rules:
 //
 //   - If passedSubnets is empty, returns []net.IP{nil}.
@@ -92,7 +93,7 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 //   - then try to parse as an IP.
 //
 // Fail if we can't find it in the map or parse it as an IP.
-func parseSubnets(passedSubnets []string, subnetMap map[string]net.IP) ([]net.IP, map[string]string, error) {
+func ParseSubnets(passedSubnets []string, subnetMap map[string]net.IP) ([]net.IP, map[string]string, error) {
 
 	// no subnets -> {nil}
 	if len(passedSubnets) == 0 {
@@ -167,7 +168,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	}
 	passedSubnetStrs, _ := cmdCtx.Flags["--subnet"].([]string)
 
-	parsedSubnets, subnetToName, err := parseSubnets(passedSubnetStrs, nameToSubnet)
+	parsedSubnets, subnetToName, err := ParseSubnets(passedSubnetStrs, nameToSubnet)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't parse subnets: %w", err)
 	}
@@ -228,7 +229,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		GlobalTimeout:   globalTimeout,
 		NameserverNames: nameserverNames,
 		Stdout:          cmdCtx.Stdout,
-		SubnetNames:     subnetToName,
+		SubnetToName:    subnetToName,
 	}, nil
 }
 
@@ -239,7 +240,7 @@ func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p dig.DigRepeatParams, 
 			return ""
 		}
 		subnetStr := subnet.String()
-		name := parsed.SubnetNames[subnetStr]
+		name := parsed.SubnetToName[subnetStr]
 		return "# " + name + "\n" + subnet.String()
 	}
 
