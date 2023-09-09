@@ -3,52 +3,44 @@
 
 <head>
     <title>Results</title>
+    <link rel="stylesheet" href="/static/index.css" type="text/css">
 </head>
 
 <body>
-    <p>
-        Results
-    </p>
+    <h1>Results</h1>
     <table>
         <thead>
             <tr>
                 <th>Qname</th>
                 <th>Rtype</th>
                 <th>Nameserver</th>
-                <th>Ans/Err</th>
-                <th>Count</th>
+                <th>Ans/Err with Count</th>
             </tr>
         </thead>
         <tbody>
-            {{ $params := .Params }}
-
-            {{ $results := .Results }}
-            {{ range $idx, $e := .Params }}
-
-            {{ $param := (index $params $idx) }}
-            {{ $result := (index $results $idx) }}
-
-
+            {{ $td := .}}
+            {{range $row := $td.Rows}}
             <tr>
-                <td> {{ $param.DigOneParams.Qname }} </td>
-                <td>{{ $param.DigOneParams.Rtype }}</td>
-                <td>{{ $param.DigOneParams.NameserverIPPort }}</td>
-                {{ range $result.Answers }}
-                <td>{{ .StringSlice }}</td>
-                <td>{{ .Count }}</td>
-                {{ end}}
-                {{ range $result.Errors }}
-            <tr>
-                <td> {{ $param.DigOneParams.Qname }} </td>
-                <td>{{ $param.DigOneParams.Rtype }}</td>
-                <td>{{ $param.DigOneParams.NameserverIPPort }}</td>
-                <td>{{ .String }}</td>
-                <td>{{ .Count }}</td>
+                {{range $col := $row.Columns}}
+                <td rowspan="{{$col.Rowspan}}">{{$col.Content}}</td>
+                {{end}}
+                <td>
+                    <table>
+                        {{range $aec := $row.AnsErrCounts}}
+                        <tr>
+                            <td>
+                                {{ range $index, $ae := $aec.AnsErrs }}
+                                {{if $index}}<br>{{end}}
+                                {{$ae}}
+                                {{end}}
+                            </td>
+                            <td>{{ $aec.Count }}</td>
+                        </tr>
+                        {{end}}
+                    </table>
+                </td>
             </tr>
-            {{ end }}
-            </tr>
-
-            {{ end}}
+            {{end}}
         </tbody>
     </table>
 </body>

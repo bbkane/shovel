@@ -156,7 +156,7 @@ func submit(c echo.Context) error {
 
 	}
 
-	return c.Render(http.StatusOK, "submit2.html", t)
+	return c.Render(http.StatusOK, "submit.html", t)
 }
 
 // -- Run
