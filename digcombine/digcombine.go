@@ -17,22 +17,6 @@ import (
 	"go.bbkane.com/warg/command"
 )
 
-// getSubnet, either from --subnet-map or directly from subnet.
-func getSubnet(subnetMap map[string]netip.Addr, subnet string) (net.IP, string, error) {
-
-	// check in map
-	if subAddr, exists := subnetMap[subnet]; exists {
-		return subAddr.AsSlice(), subnet, nil
-	}
-
-	// try to parse directly
-	subIP := net.ParseIP(subnet)
-	if subIP == nil {
-		return nil, "", fmt.Errorf("Could not parse IP: %s", subnet)
-	}
-	return subIP, "passed ip", nil
-}
-
 func validateNameserverStr(nameserverStr string) error {
 	// ensure it ends in a port.
 	_, after, found := strings.Cut(nameserverStr, ":")
@@ -92,6 +76,70 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 	return rtypes, nil
 }
 
+// parseSubnets turns a list of passed subnets into a list of net.IP
+// It uses the following rules:
+//
+//   - If passedSubnets is empty, returns []net.IP{nil}.
+//
+//   - If passedSubnets == {"all"} and we have a non-empty subnetMap, return everything in subnetMap.
+//
+// Loop through passedSubnets
+//
+//   - first check if subnet == "none"
+//
+//   - then try to lookup up the passed subnet in subnetMap,
+//
+//   - then try to parse as an IP.
+//
+// Fail if we can't find it in the map or parse it as an IP.
+func parseSubnets(passedSubnets []string, subnetMap map[string]net.IP) ([]net.IP, map[string]string, error) {
+
+	// no subnets -> {nil}
+	if len(passedSubnets) == 0 {
+		return []net.IP{nil}, nil, nil
+	}
+	// if "all" is the only thing passed, add everything from subnetMap
+	if len(passedSubnets) == 1 && passedSubnets[0] == "all" && len(subnetMap) > 0 {
+		parsed := []net.IP{}
+		subnetToName := make(map[string]string)
+		for name, ip := range subnetMap {
+			parsed = append(parsed, ip)
+			subnetToName[ip.String()] = name
+		}
+		return parsed, subnetToName, nil
+	}
+
+	// Loop through passed and try to parse
+	parsed := []net.IP{}
+	subnetToName := make(map[string]string)
+	for _, passed := range passedSubnets {
+
+		// check for "none"
+		if passed == "none" {
+			parsed = append(parsed, nil)
+			// net.IP(nil).String() == "<nil>"
+			subnetToName["<nil>"] = "none"
+			continue
+		}
+
+		// try to retrieve from map
+		if subIP, exists := subnetMap[passed]; exists {
+			parsed = append(parsed, subIP)
+			subnetToName[subIP.String()] = passed
+			continue
+		}
+
+		// try to parse as IP
+		subIP := net.ParseIP(passed)
+		if subIP == nil {
+			return nil, nil, fmt.Errorf("Could not parse IP: %s", passed)
+		}
+		parsed = append(parsed, subIP)
+		subnetToName[passed] = "passed ip"
+	}
+	return parsed, subnetToName, nil
+}
+
 func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// simple params
@@ -110,33 +158,18 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	mockDigFuncStr := cmdCtx.Flags["--mock-dig-func"].(string)
 	digFunc := getDigFunc(mockDigFuncStr)
 
-	// subnets
-	var subnets []net.IP
-	subnetNames := make(map[string]string)
-
-	subnetMap, _ := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr)
-	subnetStrs, _ := cmdCtx.Flags["--subnet"].([]string)
-
-	// if '--subnet all' is the only thing passed, add all subnets from the map
-	if len(subnetStrs) == 1 && subnetStrs[0] == "all" && len(subnetMap) > 0 {
-		subnetStrs = []string{}
-		for key := range subnetMap {
-			subnetStrs = append(subnetStrs, key)
-		}
+	// subnet
+	nameToSubnetNetIPAddr, _ := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr)
+	// convert from netip.Addr to net.IP
+	nameToSubnet := make(map[string]net.IP)
+	for name, addr := range nameToSubnetNetIPAddr {
+		nameToSubnet[name] = net.IP(addr.AsSlice())
 	}
+	passedSubnetStrs, _ := cmdCtx.Flags["--subnet"].([]string)
 
-	for _, subnetStr := range subnetStrs {
-		subnetIP, name, err := getSubnet(subnetMap, subnetStr)
-		subnetNames[subnetIP.String()] = name
-		if err != nil {
-			return nil, err
-		}
-		subnets = append(subnets, subnetIP)
-	}
-
-	// If we don't have any subnets, just use a list of one nil subnet :)
-	if len(subnets) == 0 {
-		subnets = append(subnets, nil)
+	parsedSubnets, subnetToName, err := parseSubnets(passedSubnetStrs, nameToSubnet)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't parse subnets: %w", err)
 	}
 
 	// nameservers
@@ -185,7 +218,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		proto,
 		qnames,
 		rtypes,
-		subnets,
+		parsedSubnets,
 		count,
 	)
 
@@ -195,7 +228,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		GlobalTimeout:   globalTimeout,
 		NameserverNames: nameserverNames,
 		Stdout:          cmdCtx.Stdout,
-		SubnetNames:     subnetNames,
+		SubnetNames:     subnetToName,
 	}, nil
 }
 
