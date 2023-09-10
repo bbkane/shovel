@@ -1,0 +1,6 @@
+<h2>Form Errors</h2>
+<ul>
+    {{range $e := .}}
+    <li>{{$e.Error}}</li>
+    {{end}}
+</ul>

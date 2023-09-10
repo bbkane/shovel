@@ -69,7 +69,7 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 	for _, rtypeStr := range rtypeStrs {
 		rtype, ok := dns.StringToType[rtypeStr]
 		if !ok {
-			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtype)
+			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtypeStr)
 		}
 		rtypes = append(rtypes, rtype)
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net"
 	"net/http"
 	"net/netip"
 	"strconv"
@@ -46,67 +47,38 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 
 // -- http handlers
 
-func submit(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+type TdData struct {
+	Content string
+	Rowspan int
+}
+type AnsErrCount struct {
+	AnsErrs []string
+	Count   int
+}
 
-	countForm := c.FormValue("count")
-	qnames := strings.Split(c.FormValue("qnames"), " ")
-	nameservers := strings.Split(c.FormValue("nameservers"), " ")
-	proto := c.FormValue("protocol")
-	rtypeStrs := strings.Split(c.FormValue("rtypes"), " ")
-	subnets := strings.Split(c.FormValue("subnets"), " ")
+type Row struct {
+	Columns      []TdData
+	AnsErrCounts []AnsErrCount
+}
+type Table struct {
+	Rows []Row
+}
 
-	// TODO: validate all of this or else I'mma be panicking!
+type buildTableParams struct {
+	Qnames       []string
+	RtypeStrs    []string
+	Subnets      []net.IP
+	Nameservers  []string
+	ResMul       []dig.DigRepeatResult
+	SubnetToName map[string]string
+}
 
-	count, err := strconv.Atoi(countForm)
-	if err != nil {
-		panic(err)
-	}
-
-	rtypes, err := digcombine.ConvertRTypes(rtypeStrs)
-	if err != nil {
-		panic(err)
-	}
-
-	parsedSubnets, subnetToName, err := digcombine.ParseSubnets(subnets, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	params := dig.CombineDigRepeatParams(
-		nameservers,
-		proto,
-		qnames,
-		rtypes,
-		parsedSubnets,
-		count,
-	)
-
-	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
-
-	type TdData struct {
-		Content string
-		Rowspan int
-	}
-	type AnsErrCount struct {
-		AnsErrs []string
-		Count   int
-	}
-
-	type Row struct {
-		Columns      []TdData
-		AnsErrCounts []AnsErrCount
-	}
-	type Table struct {
-		Rows []Row
-	}
-
+func buildTable(p buildTableParams) Table {
 	// Add params to output table
-	qLen := len(qnames)
-	rLen := len(rtypes)
-	sLen := len(parsedSubnets)
-	nLen := len(nameservers)
+	qLen := len(p.Qnames)
+	rLen := len(p.RtypeStrs)
+	sLen := len(p.Subnets)
+	nLen := len(p.Nameservers)
 	rows := qLen * rLen * sLen * nLen
 	t := Table{
 		Rows: make([]Row, rows),
@@ -116,7 +88,7 @@ func submit(c echo.Context) error {
 	{
 		i := 0
 		for r := 0; r < rows; r += qWidth {
-			td := TdData{Content: qnames[i%qLen], Rowspan: qWidth}
+			td := TdData{Content: p.Qnames[i%qLen], Rowspan: qWidth}
 			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
 			i++
 		}
@@ -126,7 +98,7 @@ func submit(c echo.Context) error {
 	{
 		i := 0
 		for r := 0; r < rows; r += rWidth {
-			td := TdData{Content: rtypeStrs[i%rLen], Rowspan: rWidth}
+			td := TdData{Content: p.RtypeStrs[i%rLen], Rowspan: rWidth}
 			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
 			i++
 		}
@@ -136,8 +108,8 @@ func submit(c echo.Context) error {
 	{
 		i := 0
 		for r := 0; r < rows; r += sWidth {
-			parsedSubnetStr := parsedSubnets[i%sLen].String()
-			content := parsedSubnetStr + "(" + subnetToName[parsedSubnetStr] + ")"
+			parsedSubnetStr := p.Subnets[i%sLen].String()
+			content := parsedSubnetStr + "(" + p.SubnetToName[parsedSubnetStr] + ")"
 
 			td := TdData{Content: content, Rowspan: sWidth}
 			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
@@ -149,14 +121,14 @@ func submit(c echo.Context) error {
 	{
 		i := 0
 		for r := 0; r < rows; r += nWidth {
-			td := TdData{Content: nameservers[i%nLen], Rowspan: nWidth}
+			td := TdData{Content: p.Nameservers[i%nLen], Rowspan: nWidth}
 			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
 			i++
 		}
 	}
 
 	// Add anserrs to table
-	for i, r := range resMul {
+	for i, r := range p.ResMul {
 		aecs := []AnsErrCount{}
 		for _, a := range r.Answers {
 			aecs = append(
@@ -173,6 +145,64 @@ func submit(c echo.Context) error {
 		t.Rows[i].AnsErrCounts = aecs
 
 	}
+
+	return t
+}
+
+func submit(c echo.Context) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	countForm := c.FormValue("count")
+	qnames := strings.Split(c.FormValue("qnames"), " ")
+	nameservers := strings.Split(c.FormValue("nameservers"), " ")
+	proto := c.FormValue("protocol")
+	rtypeStrs := strings.Split(c.FormValue("rtypes"), " ")
+	subnets := strings.Split(c.FormValue("subnets"), " ")
+
+	errors := []error{}
+
+	count, err := strconv.Atoi(countForm)
+	if err != nil {
+		err := fmt.Errorf("error parsing count: %w", err)
+		errors = append(errors, err)
+	}
+
+	rtypes, err := digcombine.ConvertRTypes(rtypeStrs)
+	if err != nil {
+		err := fmt.Errorf("error parsing rtypes: %w", err)
+		errors = append(errors, err)
+	}
+
+	parsedSubnets, subnetToName, err := digcombine.ParseSubnets(subnets, nil)
+	if err != nil {
+		err := fmt.Errorf("error parsing subnets: %w", err)
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return c.Render(http.StatusOK, "formerror.html", errors)
+	}
+
+	params := dig.CombineDigRepeatParams(
+		nameservers,
+		proto,
+		qnames,
+		rtypes,
+		parsedSubnets,
+		count,
+	)
+
+	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
+
+	t := buildTable(buildTableParams{
+		Qnames:       qnames,
+		RtypeStrs:    rtypeStrs,
+		Subnets:      parsedSubnets,
+		Nameservers:  nameservers,
+		ResMul:       resMul,
+		SubnetToName: subnetToName,
+	})
 
 	return c.Render(http.StatusOK, "submit.html", t)
 }
