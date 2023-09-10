@@ -3,6 +3,7 @@ package serve
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -158,30 +159,45 @@ func submit(c echo.Context) error {
 	nameservers := strings.Split(c.FormValue("nameservers"), " ")
 	proto := c.FormValue("protocol")
 	rtypeStrs := strings.Split(c.FormValue("rtypes"), " ")
+	subnetMapStrs := strings.Split(c.FormValue("subnetMap"), " ")
 	subnets := strings.Split(c.FormValue("subnets"), " ")
 
-	errors := []error{}
+	formErrors := []error{}
 
 	count, err := strconv.Atoi(countForm)
 	if err != nil {
 		err := fmt.Errorf("error parsing count: %w", err)
-		errors = append(errors, err)
+		formErrors = append(formErrors, err)
 	}
 
 	rtypes, err := digcombine.ConvertRTypes(rtypeStrs)
 	if err != nil {
 		err := fmt.Errorf("error parsing rtypes: %w", err)
-		errors = append(errors, err)
+		formErrors = append(formErrors, err)
 	}
 
-	parsedSubnets, subnetToName, err := digcombine.ParseSubnets(subnets, nil)
+	subnetMap := make(map[string]net.IP)
+	for _, entry := range subnetMapStrs {
+		name, subnetStr, found := strings.Cut(entry, "=")
+		if !found {
+			formErrors = append(formErrors, errors.New("unable to parse subnet entry: "+entry))
+			continue
+		}
+		subnet := net.ParseIP(subnetStr)
+		if subnet == nil {
+			formErrors = append(formErrors, errors.New("unable to parse subnet in: "+entry))
+			continue
+		}
+		subnetMap[name] = subnet
+	}
+	parsedSubnets, subnetToName, err := digcombine.ParseSubnets(subnets, subnetMap)
 	if err != nil {
 		err := fmt.Errorf("error parsing subnets: %w", err)
-		errors = append(errors, err)
+		formErrors = append(formErrors, err)
 	}
 
-	if len(errors) > 0 {
-		return c.Render(http.StatusOK, "formerror.html", errors)
+	if len(formErrors) > 0 {
+		return c.Render(http.StatusOK, "formerror.html", formErrors)
 	}
 
 	params := dig.CombineDigRepeatParams(
