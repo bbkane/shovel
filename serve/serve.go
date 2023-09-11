@@ -110,7 +110,7 @@ func buildTable(p buildTableParams) Table {
 		i := 0
 		for r := 0; r < rows; r += sWidth {
 			parsedSubnetStr := p.Subnets[i%sLen].String()
-			content := parsedSubnetStr + "(" + p.SubnetToName[parsedSubnetStr] + ")"
+			content := parsedSubnetStr + " (" + p.SubnetToName[parsedSubnetStr] + ")"
 
 			td := TdData{Content: content, Rowspan: sWidth}
 			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
