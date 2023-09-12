@@ -185,6 +185,10 @@ func (s *server) Submit(c echo.Context) error {
 
 	formErrors := []error{}
 
+	if proto != "udp" && proto != "tcp" && proto != "tcp-tls" {
+		formErrors = append(formErrors, errors.New("unsupported proto (should be one of udp, tcp, tcp-tls): "+proto))
+	}
+
 	count, err := strconv.Atoi(countForm)
 	if err != nil {
 		err := fmt.Errorf("error parsing count: %w", err)
