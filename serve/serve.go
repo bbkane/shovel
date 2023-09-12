@@ -150,19 +150,34 @@ func buildTable(p buildTableParams) Table {
 	return t
 }
 
+// splitForm splits by " " and removes "" from output slice
+func splitForm(formValue string) []string {
+	vals := strings.Split(formValue, " ")
+
+	ret := []string{}
+	for _, v := range vals {
+		if v != "" {
+			ret = append(ret, v)
+		}
+	}
+	return ret
+}
+
 func submit(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	countForm := c.FormValue("count")
-	qnames := strings.Split(c.FormValue("qnames"), " ")
-	nameservers := strings.Split(c.FormValue("nameservers"), " ")
+	qnames := splitForm(c.FormValue("qnames"))
+	nameservers := splitForm(c.FormValue("nameservers"))
 	proto := c.FormValue("protocol")
-	rtypeStrs := strings.Split(c.FormValue("rtypes"), " ")
-	subnetMapStrs := strings.Split(c.FormValue("subnetMap"), " ")
-	subnets := strings.Split(c.FormValue("subnets"), " ")
+	rtypeStrs := splitForm(c.FormValue("rtypes"))
+	subnetMapStrs := splitForm(c.FormValue("subnetMap"))
+	subnets := splitForm(c.FormValue("subnets"))
 
 	formErrors := []error{}
+
+	// fmt.Printf("\n\n%#v\n\n", c.Request().URL.RawQuery)
 
 	count, err := strconv.Atoi(countForm)
 	if err != nil {
