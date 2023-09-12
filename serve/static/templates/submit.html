@@ -1,4 +1,6 @@
 <h2>Results</h2>
+{{ $td := .}}
+<p>Filled Form URL: <a href="{{$td.FilledFormURL}}">{{$td.FilledFormURL}}</a></p>
 <table>
     <thead>
         <tr>
@@ -10,7 +12,7 @@
         </tr>
     </thead>
     <tbody>
-        {{ $td := .}}
+
         {{range $row := $td.Rows}}
         <tr>
             {{range $col := $row.Columns}}

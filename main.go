@@ -205,6 +205,15 @@ func serveCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.ConfigPath("serve.address"),
 		),
+		command.Flag(
+			"--http-origin",
+			"HTTP Origin clients will access",
+			scalar.String(
+				scalar.Default("http://127.0.0.1:8080"),
+			),
+			flag.Required(),
+			flag.ConfigPath("serve.http-origin"),
+		),
 	)
 }
 

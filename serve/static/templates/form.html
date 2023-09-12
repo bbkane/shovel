@@ -10,31 +10,32 @@
   <script src="/static/3p/htmx.org@1.9.5/dist/htmx.min.js"></script>
 </head>
 
+{{$f := .}}
+
 <body>
   <h1>Shovel</h1>
   <form hx-get="/submit" hx-target="#results" hx-swap="innerHTML">
 
     <label for="count">count</label>
-    <input type="text" id="count" name="count" required="true" value="10" />
+    <input type="text" id="count" name="count" required="true" value="{{$f.Count}}" />
 
     <label for="qnames">qnames</label>
-    <input type="text" id="qnames" name="qnames" required="true" value="www.linkedin.com" />
+    <input type="text" id="qnames" name="qnames" required="true" value="{{$f.Qnames}}" />
 
     <label for="nameservers">nameservers</label>
-    <input type="text" id="nameservers" name="nameservers" required="true"
-      value="dns3.p09.nsone.net:53 ns3-42.azure-dns.org:53" />
+    <input type="text" id="nameservers" name="nameservers" required="true" value="{{$f.Nameservers}}" />
 
     <label for="protocol">protocol</label>
-    <input type="text" id="protocol" name="protocol" required="true" value="udp" />
+    <input type="text" id="protocol" name="protocol" required="true" value="{{$f.Proto}}" />
 
     <label for="rtypes">rtypes</label>
-    <input type="text" id="rtypes" name="rtypes" required="true" value="A" />
+    <input type="text" id="rtypes" name="rtypes" required="true" value="{{$f.Rtypes}}" />
 
     <label for="subnetMap">subnet map</label>
-    <input type="text" id="subnetMap" name="subnetMap" />
+    <input type="text" id="subnetMap" name="subnetMap" value="{{$f.SubnetMap}}" />
 
     <label for="subnets">subnets</label>
-    <input type="text" id="subnets" name="subnets" />
+    <input type="text" id="subnets" name="subnets" value="{{$f.Subnets}}" />
 
     <label for="submit">submit</label>
     <input type="submit" id="submit" value="Submit">

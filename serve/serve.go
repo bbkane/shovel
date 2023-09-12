@@ -62,16 +62,18 @@ type Row struct {
 	AnsErrCounts []AnsErrCount
 }
 type Table struct {
-	Rows []Row
+	FilledFormURL string
+	Rows          []Row
 }
 
 type buildTableParams struct {
-	Qnames       []string
-	RtypeStrs    []string
-	Subnets      []net.IP
-	Nameservers  []string
-	ResMul       []dig.DigRepeatResult
-	SubnetToName map[string]string
+	Qnames        []string
+	RtypeStrs     []string
+	Subnets       []net.IP
+	Nameservers   []string
+	ResMul        []dig.DigRepeatResult
+	SubnetToName  map[string]string
+	FilledFormURL string
 }
 
 func buildTable(p buildTableParams) Table {
@@ -82,7 +84,8 @@ func buildTable(p buildTableParams) Table {
 	nLen := len(p.Nameservers)
 	rows := qLen * rLen * sLen * nLen
 	t := Table{
-		Rows: make([]Row, rows),
+		FilledFormURL: p.FilledFormURL,
+		Rows:          make([]Row, rows),
 	}
 
 	qWidth := rows / qLen
@@ -163,7 +166,12 @@ func splitForm(formValue string) []string {
 	return ret
 }
 
-func submit(c echo.Context) error {
+type server struct {
+	// https://developer.mozilla.org/en-US/docs/Glossary/Origin
+	HTTPOrigin string
+}
+
+func (s *server) Submit(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -176,8 +184,6 @@ func submit(c echo.Context) error {
 	subnets := splitForm(c.FormValue("subnets"))
 
 	formErrors := []error{}
-
-	// fmt.Printf("\n\n%#v\n\n", c.Request().URL.RawQuery)
 
 	count, err := strconv.Atoi(countForm)
 	if err != nil {
@@ -226,16 +232,44 @@ func submit(c echo.Context) error {
 
 	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
 
+	// fmt.Printf("\n\n%#v\n\n", c.Request().URL.RawQuery)
+	filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
+
 	t := buildTable(buildTableParams{
-		Qnames:       qnames,
-		RtypeStrs:    rtypeStrs,
-		Subnets:      parsedSubnets,
-		Nameservers:  nameservers,
-		ResMul:       resMul,
-		SubnetToName: subnetToName,
+		Qnames:        qnames,
+		RtypeStrs:     rtypeStrs,
+		Subnets:       parsedSubnets,
+		Nameservers:   nameservers,
+		ResMul:        resMul,
+		SubnetToName:  subnetToName,
+		FilledFormURL: filledFormURL,
 	})
 
 	return c.Render(http.StatusOK, "submit.html", t)
+}
+
+func index(c echo.Context) error {
+
+	type formFields struct {
+		Count       string
+		Qnames      string
+		Nameservers string
+		Proto       string
+		Rtypes      string
+		SubnetMap   string
+		Subnets     string
+	}
+
+	f := formFields{
+		Count:       c.FormValue("count"),
+		Qnames:      c.FormValue("qnames"),
+		Nameservers: c.FormValue("nameservers"),
+		Proto:       c.FormValue("protocol"),
+		Rtypes:      c.FormValue("rtypes"),
+		SubnetMap:   c.FormValue("subnetMap"),
+		Subnets:     c.FormValue("subnets"),
+	}
+	return c.Render(http.StatusOK, "form.html", f)
 }
 
 // -- Run
@@ -243,6 +277,7 @@ func submit(c echo.Context) error {
 func Run(cmdCtx command.Context) error {
 
 	addrPort := cmdCtx.Flags["--address"].(netip.AddrPort).String()
+	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -264,13 +299,7 @@ func Run(cmdCtx command.Context) error {
 
 	e.GET(
 		"/",
-		func(c echo.Context) error {
-			file, err := embeddedFiles.ReadFile("static/form.html")
-			if err != nil {
-				panic("oopsies bad fs path: " + err.Error())
-			}
-			return c.HTMLBlob(http.StatusOK, file)
-		},
+		index,
 	)
 	e.GET(
 		"/static/index.css",
@@ -293,9 +322,13 @@ func Run(cmdCtx command.Context) error {
 		},
 	)
 
+	s := server{
+		HTTPOrigin: httpOrigin,
+	}
+
 	e.GET(
 		"/submit",
-		submit,
+		s.Submit,
 	)
 
 	e.Logger.Fatal(e.Start(addrPort))
