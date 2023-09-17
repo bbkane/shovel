@@ -197,13 +197,13 @@ func serveCmd(digFooter string) command.Command {
 		serve.Run,
 		command.Footer(digFooter),
 		command.Flag(
-			"--address",
+			"--addr-port",
 			"Address + Port to serve from",
 			scalar.AddrPort(
 				scalar.Default(netip.MustParseAddrPort("127.0.0.1:8080")),
 			),
 			flag.Required(),
-			flag.ConfigPath("serve.address"),
+			flag.ConfigPath("serve.addr-port"),
 		),
 		command.Flag(
 			"--http-origin",
@@ -213,6 +213,12 @@ func serveCmd(digFooter string) command.Command {
 			),
 			flag.Required(),
 			flag.ConfigPath("serve.http-origin"),
+		),
+		command.Flag(
+			"--motd",
+			"Message of the day to print on /",
+			scalar.String(),
+			flag.ConfigPath("serve.motd"),
 		),
 	)
 }

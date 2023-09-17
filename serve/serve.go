@@ -169,11 +169,12 @@ func splitFormValue(formValue string) []string {
 type server struct {
 	// https://developer.mozilla.org/en-US/docs/Glossary/Origin
 	HTTPOrigin string
+
+	// Motd - message of the day
+	Motd string
 }
 
 func (s *server) Submit(c echo.Context) error {
-
-	time.Sleep(5 * time.Second) // TOOD: rm
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -258,9 +259,9 @@ func (s *server) Submit(c echo.Context) error {
 	return c.Render(http.StatusOK, "submit.html", t)
 }
 
-func index(c echo.Context) error {
+func (s *server) Index(c echo.Context) error {
 
-	type formFields struct {
+	type indexData struct {
 		Count       string
 		Qnames      string
 		Nameservers string
@@ -268,9 +269,11 @@ func index(c echo.Context) error {
 		Rtypes      string
 		SubnetMap   string
 		Subnets     string
+
+		Motd string
 	}
 
-	f := formFields{
+	f := indexData{
 		Count:       c.FormValue("count"),
 		Qnames:      c.FormValue("qnames"),
 		Nameservers: c.FormValue("nameservers"),
@@ -278,6 +281,7 @@ func index(c echo.Context) error {
 		Rtypes:      c.FormValue("rtypes"),
 		SubnetMap:   c.FormValue("subnetMap"),
 		Subnets:     c.FormValue("subnets"),
+		Motd:        s.Motd,
 	}
 	return c.Render(http.StatusOK, "index.html", f)
 }
@@ -294,8 +298,9 @@ func mustRead(fSys embed.FS, path string) []byte {
 
 func Run(cmdCtx command.Context) error {
 
-	addrPort := cmdCtx.Flags["--address"].(netip.AddrPort).String()
+	addrPort := cmdCtx.Flags["--addr-port"].(netip.AddrPort).String()
 	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
+	motd, _ := cmdCtx.Flags["--motd"].(string)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -315,9 +320,14 @@ func Run(cmdCtx command.Context) error {
 	}
 	e.Renderer = t
 
+	s := server{
+		HTTPOrigin: httpOrigin,
+		Motd:       motd,
+	}
+
 	e.GET(
 		"/",
-		index,
+		s.Index,
 	)
 	e.GET(
 		"/static/index.css",
@@ -340,10 +350,6 @@ func Run(cmdCtx command.Context) error {
 			return c.Blob(http.StatusOK, "image/svg+xml", blob)
 		},
 	)
-
-	s := server{
-		HTTPOrigin: httpOrigin,
-	}
 
 	e.POST(
 		"/submit",

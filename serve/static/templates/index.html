@@ -14,6 +14,11 @@
 
 <body>
   <h1>Shovel</h1>
+
+  {{if $f.Motd }}
+  <p id="motd">{{$f.Motd}}</p>
+  {{end}}
+
   <form hx-post="/submit" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-spinner">
 
     <label for="count">count</label>
