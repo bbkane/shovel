@@ -153,8 +153,8 @@ func buildTable(p buildTableParams) Table {
 	return t
 }
 
-// splitForm splits by " " and removes "" from output slice
-func splitForm(formValue string) []string {
+// splitFormValue splits by " " and removes "" from output slice
+func splitFormValue(formValue string) []string {
 	vals := strings.Split(formValue, " ")
 
 	ret := []string{}
@@ -172,16 +172,19 @@ type server struct {
 }
 
 func (s *server) Submit(c echo.Context) error {
+
+	time.Sleep(5 * time.Second) // TOOD: rm
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	countForm := c.FormValue("count")
-	qnames := splitForm(c.FormValue("qnames"))
-	nameservers := splitForm(c.FormValue("nameservers"))
+	qnames := splitFormValue(c.FormValue("qnames"))
+	nameservers := splitFormValue(c.FormValue("nameservers"))
 	proto := c.FormValue("protocol")
-	rtypeStrs := splitForm(c.FormValue("rtypes"))
-	subnetMapStrs := splitForm(c.FormValue("subnetMap"))
-	subnets := splitForm(c.FormValue("subnets"))
+	rtypeStrs := splitFormValue(c.FormValue("rtypes"))
+	subnetMapStrs := splitFormValue(c.FormValue("subnetMap"))
+	subnets := splitFormValue(c.FormValue("subnets"))
 
 	formErrors := []error{}
 
@@ -281,6 +284,14 @@ func index(c echo.Context) error {
 
 // -- Run
 
+func mustRead(fSys embed.FS, path string) []byte {
+	file, err := fSys.ReadFile(path)
+	if err != nil {
+		panic("oopsies bad fs path: " + err.Error())
+	}
+	return file
+}
+
 func Run(cmdCtx command.Context) error {
 
 	addrPort := cmdCtx.Flags["--address"].(netip.AddrPort).String()
@@ -311,21 +322,22 @@ func Run(cmdCtx command.Context) error {
 	e.GET(
 		"/static/index.css",
 		func(c echo.Context) error {
-			file, err := embeddedFiles.ReadFile("static/index.css")
-			if err != nil {
-				panic("oopsies bad fs path: " + err.Error())
-			}
-			return c.Blob(http.StatusOK, "text/css", file)
+			blob := mustRead(embeddedFiles, "static/index.css")
+			return c.Blob(http.StatusOK, "text/css", blob)
 		},
 	)
 	e.GET(
 		"/static/3p/htmx.org@1.9.5/dist/htmx.min.js",
 		func(c echo.Context) error {
-			file, err := embeddedFiles.ReadFile("static/3p/htmx.org@1.9.5/dist/htmx.min.js")
-			if err != nil {
-				panic("oopsies bad fs path: " + err.Error())
-			}
-			return c.Blob(http.StatusOK, "application/javascript; charset=UTF-8", file)
+			blob := mustRead(embeddedFiles, "static/3p/htmx.org@1.9.5/dist/htmx.min.js")
+			return c.Blob(http.StatusOK, "application/javascript; charset=UTF-8", blob)
+		},
+	)
+	e.GET(
+		"/static/loading-spinner.svg",
+		func(c echo.Context) error {
+			blob := mustRead(embeddedFiles, "static/loading-spinner.svg")
+			return c.Blob(http.StatusOK, "image/svg+xml", blob)
 		},
 	)
 
