@@ -222,7 +222,7 @@ func (s *server) Submit(c echo.Context) error {
 	}
 
 	if len(formErrors) > 0 {
-		return c.Render(http.StatusOK, "formerror.html", formErrors)
+		return c.Render(http.StatusOK, "submiterror.html", formErrors)
 	}
 
 	params := dig.CombineDigRepeatParams(
@@ -236,8 +236,11 @@ func (s *server) Submit(c echo.Context) error {
 
 	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
 
-	// fmt.Printf("\n\n%#v\n\n", c.Request().URL.RawQuery)
-	filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
+	// This only works for GET
+	// filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
+
+	// This works for POST and I think it works for GET too?
+	filledFormURL := s.HTTPOrigin + "/?" + c.Request().Form.Encode()
 
 	t := buildTable(buildTableParams{
 		Qnames:        qnames,
@@ -273,7 +276,7 @@ func index(c echo.Context) error {
 		SubnetMap:   c.FormValue("subnetMap"),
 		Subnets:     c.FormValue("subnets"),
 	}
-	return c.Render(http.StatusOK, "form.html", f)
+	return c.Render(http.StatusOK, "index.html", f)
 }
 
 // -- Run
@@ -330,7 +333,7 @@ func Run(cmdCtx command.Context) error {
 		HTTPOrigin: httpOrigin,
 	}
 
-	e.GET(
+	e.POST(
 		"/submit",
 		s.Submit,
 	)
