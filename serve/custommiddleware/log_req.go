@@ -1,4 +1,4 @@
-package serve
+package custommiddleware
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-// LogReqMiddleware logs the HTTP request to the server. Maybe at some point I'll log the resp too, but that looks harder
-func LogReqMiddleware() echo.MiddlewareFunc {
+// LogRequest logs the HTTP request to the server. Maybe at some point I'll log the resp too, but that looks harder
+func LogRequest() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			req := c.Request()

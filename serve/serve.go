@@ -1,17 +1,25 @@
 package serve
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
 	"net/netip"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/uptrace/uptrace-go/uptrace"
+	"go.bbkane.com/shovel/serve/custommiddleware"
 	"go.bbkane.com/warg/command"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // -- filesystem
@@ -87,13 +95,20 @@ func Run(cmdCtx command.Context) error {
 	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
 	motd, _ := cmdCtx.Flags["--motd"].(string)
 
+	// TODO: make these configurable
+	// export UPTRACE_DSN=...
+	uptrace.ConfigureOpentelemetry(
+		uptrace.WithServiceName("shovel"),
+		uptrace.WithServiceVersion("v0.0.1"),
+		uptrace.WithDeploymentEnvironment("dev"),
+	)
+
 	e := echo.New()
+
+	// echo customization
 	e.HideBanner = true
-	e.Logger.SetLevel(log.DEBUG)
 
-	e.Use(middleware.Logger())
-	e.Use(LogReqMiddleware())
-
+	// templates
 	temp, err := template.New("").
 		Funcs(template.FuncMap{}).
 		ParseFS(embeddedFiles, "static/templates/*.html")
@@ -105,6 +120,26 @@ func Run(cmdCtx command.Context) error {
 	}
 	e.Renderer = t
 
+	// logger
+	e.Logger.SetLevel(log.DEBUG)
+	e.Use(middleware.Logger())
+	e.Use(custommiddleware.LogRequest())
+
+	// tracing
+	// TODO: connect with logger? Ditch logger and use this?
+	e.Use(otelecho.Middleware("shovel"))
+	e.Use(custommiddleware.TraceID())
+
+	// recover from panics
+	e.Use(middleware.Recover())
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		ctx := c.Request().Context()
+		trace.SpanFromContext(ctx).RecordError(err)
+
+		e.DefaultHTTPErrorHandler(err, c)
+	}
+
+	// routes
 	s := &server{
 		HTTPOrigin: httpOrigin,
 		Motd:       motd,
@@ -112,6 +147,37 @@ func Run(cmdCtx command.Context) error {
 
 	addRoutes(e, s)
 
-	e.Logger.Fatal(e.Start(addrPort))
+	// // start
+	// e.Logger.Fatal(e.Start(addrPort))
+	// return nil
+
+	// Start server and shutdown gracefully. https://echo.labstack.com/cookbook/graceful-shutdown/
+	go func() {
+		if err := e.Start(addrPort); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatalj(log.JSON{
+				"message": "start error, shutting down",
+				"err":     err.Error(),
+			})
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.
+	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+		return err
+	}
+	e.Logger.Print("echo shutdown complete")
+
+	if err := uptrace.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
+	e.Logger.Print("uptrace shutdown complete")
+
 	return nil
 }
