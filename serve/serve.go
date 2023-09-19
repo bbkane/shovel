@@ -15,7 +15,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/uptrace/uptrace-go/uptrace"
 	"go.bbkane.com/shovel/serve/custommiddleware"
 	"go.bbkane.com/warg/command"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -95,14 +94,6 @@ func Run(cmdCtx command.Context) error {
 	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
 	motd, _ := cmdCtx.Flags["--motd"].(string)
 
-	// TODO: make these configurable
-	// export UPTRACE_DSN=...
-	uptrace.ConfigureOpentelemetry(
-		uptrace.WithServiceName("shovel"),
-		uptrace.WithServiceVersion("v0.0.1"),
-		uptrace.WithDeploymentEnvironment("dev"),
-	)
-
 	e := echo.New()
 
 	// echo customization
@@ -127,6 +118,19 @@ func Run(cmdCtx command.Context) error {
 
 	// tracing
 	// TODO: connect with logger? Ditch logger and use this?
+
+	tp, err := initHTTPTracerProvider(initHTTPTracerProviderParams{
+		Endpoint:           netip.MustParseAddrPort("127.0.0.1:5080"),
+		User:               "root@example.com",
+		Password:           "Complexpass#123",
+		ServiceName:        "shovel",
+		ServiceVersion:     "v0.0.1",
+		ServiceEnvironment: "dev",
+	})
+	if err != nil {
+		return fmt.Errorf("could not init tracerprovider: %w", err)
+	}
+
 	e.Use(otelecho.Middleware("shovel"))
 	e.Use(custommiddleware.TraceID())
 
@@ -172,12 +176,12 @@ func Run(cmdCtx command.Context) error {
 		e.Logger.Fatal(err)
 		return err
 	}
-	e.Logger.Print("echo shutdown complete")
+	e.Logger.Info("echo shutdown complete")
 
-	if err := uptrace.Shutdown(ctx); err != nil {
+	if err := tp.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}
-	e.Logger.Print("uptrace shutdown complete")
+	e.Logger.Info("traceprovider shutdown complete")
 
 	return nil
 }
