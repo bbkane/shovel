@@ -220,6 +220,62 @@ func serveCmd(digFooter string) command.Command {
 			scalar.String(),
 			flag.ConfigPath("serve.motd"),
 		),
+		command.Flag(
+			"--open-observe-enabled",
+			"Enable tracing with OpenObserve",
+			scalar.Bool(
+				scalar.Default(false),
+			),
+			flag.Required(),
+			flag.ConfigPath("serve.open-observe.enabled"),
+		),
+		command.Flag(
+			"--open-observe-endpoint",
+			"Endpoint to send traces to",
+			scalar.AddrPort(
+				scalar.Default(netip.MustParseAddrPort("127.0.0.1:5080")),
+			),
+			flag.ConfigPath("serve.open-observe.endpoint"),
+		),
+		command.Flag(
+			"--open-observe-user",
+			"OpenObserve Username",
+			scalar.String(),
+			flag.ConfigPath("serve.open-observe.user"),
+			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_USER"),
+		),
+		command.Flag(
+			"--open-observe-pass",
+			"OpenObserve Password",
+			scalar.String(),
+			flag.ConfigPath("serve.open-observe.pass"),
+			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_PASS"),
+		),
+		command.Flag(
+			"--open-observe-service-name",
+			"OpenObserve Service Name",
+			scalar.String(
+				scalar.Default("shovel serve"),
+			),
+			flag.ConfigPath("serve.open-observe.service-name"),
+		),
+		command.Flag(
+			"--open-observe-service-version",
+			"OpenObserve Service Version - TODO: read from shovel binary",
+			scalar.String(
+				scalar.Default("TODO"),
+			),
+			flag.ConfigPath("serve.open-observe.service-version"),
+		),
+		command.Flag(
+			"--open-observe-service-env",
+			"OpenObserve Service Environment",
+			scalar.String(
+				scalar.Default("dev"),
+			),
+			flag.ConfigPath("serve.open-observe.service-env"),
+		),
+		// TODO: finish these, but let's try to get an hour of sleep
 	)
 }
 

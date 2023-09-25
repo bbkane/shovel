@@ -3,6 +3,7 @@ package serve
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -18,6 +19,7 @@ import (
 	"go.bbkane.com/shovel/serve/custommiddleware"
 	"go.bbkane.com/warg/command"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -94,6 +96,26 @@ func Run(cmdCtx command.Context) error {
 	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
 	motd, _ := cmdCtx.Flags["--motd"].(string)
 
+	ooEnabled := cmdCtx.Flags["--open-observe-enabled"].(bool)
+
+	var tracerParams initHTTPTracerProviderParams
+	if ooEnabled {
+		for _, name := range []string{"--open-observe-endpoint", "--open-observe-user", "--open-observe-pass", "--open-observe-service-name", "--open-observe-service-version", "--open-observe-service-env"} {
+			if _, exists := cmdCtx.Flags[name]; !exists {
+				return errors.New("--open-observe-enabled requires this flag to be set: " + name)
+			}
+		}
+
+		tracerParams = initHTTPTracerProviderParams{
+			Endpoint:           cmdCtx.Flags["--open-observe-endpoint"].(netip.AddrPort),
+			User:               cmdCtx.Flags["--open-observe-user"].(string),
+			Password:           cmdCtx.Flags["--open-observe-pass"].(string),
+			ServiceName:        cmdCtx.Flags["--open-observe-service-name"].(string),
+			ServiceVersion:     cmdCtx.Flags["--open-observe-service-version"].(string),
+			ServiceEnvironment: cmdCtx.Flags["--open-observe-service-env"].(string),
+		}
+	}
+
 	e := echo.New()
 
 	// echo customization
@@ -116,19 +138,12 @@ func Run(cmdCtx command.Context) error {
 	e.Use(middleware.Logger())
 	e.Use(custommiddleware.LogRequest())
 
-	// tracing
-	// TODO: connect with logger? Ditch logger and use this?
-
-	tp, err := initHTTPTracerProvider(initHTTPTracerProviderParams{
-		Endpoint:           netip.MustParseAddrPort("127.0.0.1:5080"),
-		User:               "root@example.com",
-		Password:           "Complexpass#123",
-		ServiceName:        "shovel",
-		ServiceVersion:     "v0.0.1",
-		ServiceEnvironment: "dev",
-	})
-	if err != nil {
-		return fmt.Errorf("could not init tracerprovider: %w", err)
+	var tp *sdktrace.TracerProvider // TODO: what does an uninitialized provider do???
+	if ooEnabled {
+		tp, err = initHTTPTracerProvider(tracerParams)
+		if err != nil {
+			return fmt.Errorf("could not init tracerprovider: %w", err)
+		}
 	}
 
 	e.Use(otelecho.Middleware("shovel"))
