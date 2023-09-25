@@ -96,24 +96,34 @@ func Run(cmdCtx command.Context) error {
 	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
 	motd, _ := cmdCtx.Flags["--motd"].(string)
 
-	ooEnabled := cmdCtx.Flags["--open-observe-enabled"].(bool)
+	otelProvider := cmdCtx.Flags["--otel-provider"].(string)
 
-	var tracerParams initHTTPTracerProviderParams
-	if ooEnabled {
-		for _, name := range []string{"--open-observe-endpoint", "--open-observe-user", "--open-observe-pass", "--open-observe-service-name", "--open-observe-service-version", "--open-observe-service-env"} {
+	var tp *sdktrace.TracerProvider
+	var tpErr error
+	tracerArgs := tracerResourceArgs{
+		ServiceName:        cmdCtx.Flags["--otel-service-name"].(string),
+		ServiceVersion:     cmdCtx.Flags["--otel-service-version"].(string),
+		ServiceEnvironment: cmdCtx.Flags["--otel-service-env"].(string),
+	}
+	switch otelProvider {
+	case "open-observe":
+		for _, name := range []string{"--open-observe-endpoint", "--open-observe-user", "--open-observe-pass"} {
 			if _, exists := cmdCtx.Flags[name]; !exists {
-				return errors.New("--open-observe-enabled requires this flag to be set: " + name)
+				return errors.New("--otel-provider requires this flag to be set: " + name)
 			}
 		}
-
-		tracerParams = initHTTPTracerProviderParams{
-			Endpoint:           cmdCtx.Flags["--open-observe-endpoint"].(netip.AddrPort),
-			User:               cmdCtx.Flags["--open-observe-user"].(string),
-			Password:           cmdCtx.Flags["--open-observe-pass"].(string),
-			ServiceName:        cmdCtx.Flags["--open-observe-service-name"].(string),
-			ServiceVersion:     cmdCtx.Flags["--open-observe-service-version"].(string),
-			ServiceEnvironment: cmdCtx.Flags["--open-observe-service-env"].(string),
+		httpTracerParams := initHTTPTracerProviderParams{
+			Endpoint: cmdCtx.Flags["--open-observe-endpoint"].(netip.AddrPort),
+			User:     cmdCtx.Flags["--open-observe-user"].(string),
+			Password: cmdCtx.Flags["--open-observe-pass"].(string),
 		}
+		tp, tpErr = initHTTPTracerProvider(httpTracerParams, tracerArgs)
+	case "stdout":
+		tp, tpErr = initStdoutTracerProvider(tracerArgs)
+	}
+
+	if tpErr != nil {
+		return fmt.Errorf("could not init tracerprovider: %w", tpErr)
 	}
 
 	e := echo.New()
@@ -133,18 +143,11 @@ func Run(cmdCtx command.Context) error {
 	}
 	e.Renderer = t
 
+	// TODO: add ability to log to file
 	// logger
-	e.Logger.SetLevel(log.DEBUG)
-	e.Use(middleware.Logger())
-	e.Use(custommiddleware.LogRequest())
-
-	var tp *sdktrace.TracerProvider // TODO: what does an uninitialized provider do???
-	if ooEnabled {
-		tp, err = initHTTPTracerProvider(tracerParams)
-		if err != nil {
-			return fmt.Errorf("could not init tracerprovider: %w", err)
-		}
-	}
+	// e.Logger.SetLevel(log.DEBUG)
+	// e.Use(middleware.Logger())
+	// e.Use(custommiddleware.LogRequest())
 
 	e.Use(otelecho.Middleware("shovel"))
 	e.Use(custommiddleware.TraceID())
@@ -165,10 +168,6 @@ func Run(cmdCtx command.Context) error {
 	}
 
 	addRoutes(e, s)
-
-	// // start
-	// e.Logger.Fatal(e.Start(addrPort))
-	// return nil
 
 	// Start server and shutdown gracefully. https://echo.labstack.com/cookbook/graceful-shutdown/
 	go func() {

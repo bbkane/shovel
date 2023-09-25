@@ -221,13 +221,14 @@ func serveCmd(digFooter string) command.Command {
 			flag.ConfigPath("serve.motd"),
 		),
 		command.Flag(
-			"--open-observe-enabled",
+			"--otel-provider",
 			"Enable tracing with OpenObserve",
-			scalar.Bool(
-				scalar.Default(false),
+			scalar.String(
+				scalar.Choices("open-observe", "stdout"),
+				scalar.Default("stdout"),
 			),
 			flag.Required(),
-			flag.ConfigPath("serve.open-observe.enabled"),
+			flag.ConfigPath("serve.otel.provider"),
 		),
 		command.Flag(
 			"--open-observe-endpoint",
@@ -252,30 +253,32 @@ func serveCmd(digFooter string) command.Command {
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_PASS"),
 		),
 		command.Flag(
-			"--open-observe-service-name",
+			"--otel-service-name",
 			"OpenObserve Service Name",
 			scalar.String(
 				scalar.Default("shovel serve"),
 			),
-			flag.ConfigPath("serve.open-observe.service-name"),
+			flag.ConfigPath("serve.otel.service-name"),
+			flag.Required(),
 		),
 		command.Flag(
-			"--open-observe-service-version",
+			"--otel-service-version",
 			"OpenObserve Service Version - TODO: read from shovel binary",
 			scalar.String(
 				scalar.Default("TODO"),
 			),
-			flag.ConfigPath("serve.open-observe.service-version"),
+			flag.ConfigPath("serve.otel.service-version"),
+			flag.Required(),
 		),
 		command.Flag(
-			"--open-observe-service-env",
+			"--otel-service-env",
 			"OpenObserve Service Environment",
 			scalar.String(
 				scalar.Default("dev"),
 			),
-			flag.ConfigPath("serve.open-observe.service-env"),
+			flag.ConfigPath("serve.otel.service-env"),
+			flag.Required(),
 		),
-		// TODO: finish these, but let's try to get an hour of sleep
 	)
 }
 

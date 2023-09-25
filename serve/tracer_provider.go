@@ -5,10 +5,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/netip"
+	"os"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -16,15 +18,18 @@ import (
 )
 
 type initHTTPTracerProviderParams struct {
-	Endpoint           netip.AddrPort
-	User               string
-	Password           string
+	Endpoint netip.AddrPort
+	User     string
+	Password string
+}
+
+type tracerResourceArgs struct {
 	ServiceName        string
 	ServiceVersion     string
 	ServiceEnvironment string
 }
 
-func initHTTPTracerProvider(p initHTTPTracerProviderParams) (*sdktrace.TracerProvider, error) {
+func initHTTPTracerProvider(httpArgs initHTTPTracerProviderParams, tracerArgs tracerResourceArgs) (*sdktrace.TracerProvider, error) {
 	otel.SetTextMapPropagator(
 		propagation.NewCompositeTextMapPropagator(
 			propagation.TraceContext{},
@@ -34,11 +39,12 @@ func initHTTPTracerProvider(p initHTTPTracerProviderParams) (*sdktrace.TracerPro
 
 	otlptracehttp.NewClient()
 
-	authHeader := "Basic " + base64.StdEncoding.EncodeToString([]byte(p.User+":"+p.Password))
+	authHeader := "Basic " + base64.StdEncoding.EncodeToString([]byte(httpArgs.User+":"+httpArgs.Password))
 
-	otlpHTTPExporter, err := otlptracehttp.New(context.TODO(),
+	otlpHTTPExporter, err := otlptracehttp.New(
+		context.TODO(),
 		otlptracehttp.WithInsecure(), // use http & not https
-		otlptracehttp.WithEndpoint(p.Endpoint.String()),
+		otlptracehttp.WithEndpoint(httpArgs.Endpoint.String()),
 		otlptracehttp.WithURLPath("/api/default/traces"),
 		// otlptracehttp.WithHeaders(map[string]string{
 		// 	"Authorization": "Basic cm9vdEBleGFtcGxlLmNvbTpDb21wbGV4cGFzcyMxMjMK",
@@ -62,9 +68,9 @@ func initHTTPTracerProvider(p initHTTPTracerProviderParams) (*sdktrace.TracerPro
 	res := resource.NewWithAttributes(
 		semconv.SchemaURL,
 		// the service name used to display traces in backends
-		semconv.ServiceNameKey.String(p.ServiceName),
-		semconv.ServiceVersionKey.String(p.ServiceVersion),
-		attribute.String("environment", p.ServiceEnvironment),
+		semconv.ServiceNameKey.String(tracerArgs.ServiceName),
+		semconv.ServiceVersionKey.String(tracerArgs.ServiceVersion),
+		attribute.String("environment", tracerArgs.ServiceEnvironment),
 	)
 
 	tp := sdktrace.NewTracerProvider(
@@ -76,4 +82,41 @@ func initHTTPTracerProvider(p initHTTPTracerProviderParams) (*sdktrace.TracerPro
 	otel.SetTracerProvider(tp)
 
 	return tp, nil
+}
+
+func initStdoutTracerProvider(tracerArgs tracerResourceArgs) (*sdktrace.TracerProvider, error) {
+
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		),
+	)
+
+	exporter, err := stdouttrace.New(
+		stdouttrace.WithPrettyPrint(),
+		stdouttrace.WithWriter(os.Stdout),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error creating stdout tracer: %w", err)
+	}
+
+	res := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		// the service name used to display traces in backends
+		semconv.ServiceNameKey.String(tracerArgs.ServiceName),
+		semconv.ServiceVersionKey.String(tracerArgs.ServiceVersion),
+		attribute.String("environment", tracerArgs.ServiceEnvironment),
+	)
+
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(res),
+		sdktrace.WithBatcher(exporter),
+	)
+
+	otel.SetTracerProvider(tp)
+
+	return tp, nil
+
 }

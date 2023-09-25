@@ -55,6 +55,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.18.0
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
