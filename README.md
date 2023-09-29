@@ -53,12 +53,79 @@ scoop install bbkane/shovel
 
 See [Go Developer Tooling](https://www.bbkane.com/blog/go-developer-tooling/) for notes on development tooling.
 
+# Running with `systemd`
+
+> ***This is very much a work in progress***
+
+Folder hierarchy:
+
+```
+/etc/bkane/<service>/<version>
+```
+
+And that can hold things like executables, data, unit files, and config.
+
+```bash
+sudo mkdir -p /etc/bkane/shovel/v0.0.9
+```
+
+TODO: `shovel version` shows `0.0.9` instead of `v0.0.9`...
+
+```ini
+[Unit]
+Description=Shovel DNS query frontend
+After=syslog.target network-online.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+ExecStart=/home/linuxbrew/.linuxbrew/bin/shovel serve --config /etc/bkane/shovel/v0.0.9/shovel.yaml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```
+serve:
+  addr-port:  0.0.0.0:8080
+  http-origin: http://bkane-ld2:8080
+```
+
+```bash
+sudo systemctl enable /etc/bkane/shovel/v0.0.9/shovel.service
+```
+
+```bash
+sudo systemctl start shovel
+```
+
+```bash
+sudo systemctl status shovel
+```
+
+```bash
+sudo journalctl -u shovel
+```
+
+[How to modify an existing systemd unit file | 2DayGeek](https://www.2daygeek.com/linux-modifying-existing-systemd-unit-file/)
+
+```bash
+sudo systemctl daemon-reload
+```
+
+```bash
+sudo systemctl restart shovel
+```
+
+TODO: test reboots, add security to unit file, PR to shovel docs or blog post about systemd
+
+TODO: https://www.freedesktop.org/software/systemd/man/systemd-analyze.html . See `systemd-analyze verify|security`
+
 ## Dev Notes
 
 - Go doc: https://pkg.go.dev/github.com/miekg/dns
 - `miekg/dns` exmple: https://github.com/miekg/exdns/blob/master/q/q.go
 - Look up IP subnets for a country: http://www.nirsoft.net/countryip/ or https://ipinfo.io/countries
-
 
 
 
