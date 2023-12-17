@@ -29,7 +29,7 @@ func TestRunCLI(t *testing.T) {
 		{
 			name: "simple",
 			app:  buildApp(),
-			args: []string{"shovel", "dig", "combine",
+			args: []string{"shovel", "dig",
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "1",
 				"--qname", "linkedin.com",
@@ -42,7 +42,7 @@ func TestRunCLI(t *testing.T) {
 		{
 			name: "twocount",
 			app:  buildApp(),
-			args: []string{"shovel", "dig", "combine",
+			args: []string{"shovel", "dig",
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "2",
 				"--qname", "linkedin.com",

@@ -11,11 +11,15 @@ Set TypingSpeed 100ms
 
 Set FontSize 22
 Set Height 1000
-Set Width 1750
+Set Width 1850
 Set Padding 50
 
 # https://github.com/charmbracelet/vhs/issues/39#issuecomment-1296334921
 Hide
+Type 'export PATH=".:$PATH"'
+Enter
+Type "clear"
+Enter
 Sleep 5s
 Show
 
@@ -24,7 +28,7 @@ Sleep 200ms
 Enter
 Sleep 8s
 
-Type "shovel dig combine -q www.linkedin.com -r CNAME -s china -s usa -c 10"
+Type "shovel dig -q www.linkedin.com -r CNAME -s china -s usa -c 10"
 Sleep 200ms
 Enter
 Sleep 8s
