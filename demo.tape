@@ -16,6 +16,10 @@ Set Padding 50
 
 # https://github.com/charmbracelet/vhs/issues/39#issuecomment-1296334921
 Hide
+Type 'export PATH=".:$PATH"'
+Enter
+Type "clear"
+Enter
 Sleep 5s
 Show
 
