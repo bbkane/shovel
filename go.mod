@@ -1,11 +1,12 @@
 module go.bbkane.com/shovel
 
-// Will update this to go 1.20 when https://github.com/Homebrew/homebrew-core/pull/122082 lands
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 require (
 	go.bbkane.com/gocolor v0.0.5 // indirect
-	go.bbkane.com/warg v0.0.20
+	go.bbkane.com/warg v0.0.21
 )
 
 require (

@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/netip"
-	"os"
 	"time"
 
 	"go.bbkane.com/shovel/digcombine"
@@ -291,6 +290,13 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 		"shovel",
 		section.New(
 			"Query DNS and count results",
+			section.ExistingCommand(
+				"serve",
+				serveCmd(digFooter),
+			),
+			section.ExistingFlag("--color", warg.ColorFlag()),
+			section.ExistingCommand("version", warg.VersionCommand()),
+			section.Footer(digFooter),
 			section.Section(
 				"dig",
 				"Dig in different ways",
@@ -303,14 +309,8 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 					digListCmd(digFooter),
 				),
 			),
-			section.ExistingCommand(
-				"serve",
-				serveCmd(digFooter),
-			),
-			section.Footer(digFooter),
 		),
-		warg.AddColorFlag(),
-		warg.AddVersionCommand(version),
+		warg.OverrideVersion(version),
 		warg.ConfigFlag(
 			"--config",
 			[]scalar.ScalarOpt[string]{
@@ -325,6 +325,5 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 
 func main() {
 	app := buildApp()
-	// app.MustRun([]string{"shovel", "dig", "--rtype", "A"}, os.LookupEnv)
-	app.MustRun(os.Args, os.LookupEnv)
+	app.MustRun()
 }
