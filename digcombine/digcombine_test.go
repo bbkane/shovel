@@ -13,6 +13,56 @@ import (
 	"go.bbkane.com/warg/command"
 )
 
+func TestParseSubnet(t *testing.T) {
+	tests := []struct {
+		name                string
+		passedSubnets       []string
+		subnetMap           map[string]net.IP
+		expectedSubnets     []net.IP
+		expectedSubnetNames map[string]string
+		expectedErr         bool
+	}{
+		{
+			name:                "noSubnet",
+			passedSubnets:       nil,
+			subnetMap:           nil,
+			expectedSubnets:     []net.IP{nil},
+			expectedSubnetNames: nil,
+			expectedErr:         false,
+		},
+		{
+			name:                "subnetPassedAsArg",
+			passedSubnets:       []string{"1.2.3.0"},
+			subnetMap:           nil,
+			expectedSubnets:     []net.IP{net.ParseIP("1.2.3.0")},
+			expectedSubnetNames: map[string]string{"1.2.3.0": "passed ip"},
+			expectedErr:         false,
+		},
+		{
+			name:                "badSubnetPassedAsArg",
+			passedSubnets:       []string{"badSubnet"},
+			subnetMap:           nil,
+			expectedSubnets:     nil,
+			expectedSubnetNames: nil,
+			expectedErr:         true,
+		},
+		// TODO: finish these, then rm from Test_parseCmdCtx
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualSubnets, actualSubnetNames, actualErr := ParseSubnets(tt.passedSubnets, tt.subnetMap)
+			if tt.expectedErr {
+				require.NotNil(t, actualErr)
+			} else {
+				require.Nil(t, actualErr)
+			}
+			require.Equal(t, tt.expectedSubnets, actualSubnets, "subnets")
+			require.Equal(t, tt.expectedSubnetNames, actualSubnetNames, "subnetNames")
+		})
+	}
+}
+
 func Test_parseCmdCtx(t *testing.T) {
 	tests := []struct {
 		name           string

@@ -56,7 +56,7 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 // a map of stringified subnet to name, and an error.
 // It uses the following rules:
 //
-//   - If passedSubnets is empty, returns []net.IP{nil}.
+//   - If passedSubnets is empty, returns []net.IP{nil}. Return this instead of nil directly because we'll want to range over the returned list
 //
 //   - If passedSubnets == {"all"} and we have a non-empty subnetMap, return everything in subnetMap.
 //
