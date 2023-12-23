@@ -33,6 +33,8 @@ func EmptyDigOneparams() DigOneParams {
 	}
 }
 
+type DigOneFuncCtxKey struct{}
+
 type DigOneFunc func(ctx context.Context, p DigOneParams) ([]string, error)
 
 type DigOneResult struct {

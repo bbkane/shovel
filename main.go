@@ -92,14 +92,6 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.combine.global-timeout"),
 		),
 		command.Flag(
-			"--mock-dig-func",
-			"Flag to mock dig func. Used only for testing",
-			scalar.String(
-				scalar.Default("none"),
-			),
-			flag.Required(),
-		),
-		command.Flag(
 			"--protocol",
 			"Protocol to use when digging",
 			scalar.String(
@@ -133,14 +125,6 @@ func digListCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.list[].qname"),
 			flag.Required(),
 			flag.Alias("-q"),
-		),
-		command.Flag(
-			"--mock-dig-func",
-			"Flag to mock dig func. Used only for testing",
-			scalar.String(
-				scalar.Default("none"),
-			),
-			flag.Required(),
 		),
 		command.Flag(
 			"--nameserver",

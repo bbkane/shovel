@@ -31,30 +31,6 @@ func validateNameserverStr(nameserverStr string) error {
 	return nil
 }
 
-func getDigFunc(name string) dig.DigOneFunc {
-	digs := map[string]dig.DigOneFunc{
-		"none": dig.DigOne,
-		"simple": dig.DigOneFuncMock(
-			context.Background(),
-			[]dig.DigOneResult{
-				{Answers: []string{"1.2.3.4"}, Err: nil},
-			},
-		),
-		"twocount": dig.DigOneFuncMock(
-			context.Background(),
-			[]dig.DigOneResult{
-				{Answers: []string{"1.2.3.4"}, Err: nil},
-				{Answers: []string{"1.2.3.4"}, Err: nil},
-			},
-		),
-	}
-	dig, exists := digs[name]
-	if !exists {
-		panic("could not find dig func: " + name)
-	}
-	return dig
-}
-
 type parsedCmdCtx struct {
 	Dig             dig.DigOneFunc
 	DigRepeatParams []dig.DigRepeatParams
@@ -156,8 +132,10 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		return nil, fmt.Errorf("couldn't parse cmdCtx: %w", err)
 	}
 
-	mockDigFuncStr := cmdCtx.Flags["--mock-dig-func"].(string)
-	digFunc := getDigFunc(mockDigFuncStr)
+	var digOneFunc dig.DigOneFunc = dig.DigOne
+	if replacementDigOneFunc := cmdCtx.Context.Value(dig.DigOneFuncCtxKey{}); replacementDigOneFunc != nil {
+		digOneFunc = replacementDigOneFunc.(dig.DigOneFunc)
+	}
 
 	// subnet
 	nameToSubnetNetIPAddr, _ := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr)
@@ -224,7 +202,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	)
 
 	return &parsedCmdCtx{
-		Dig:             digFunc,
+		Dig:             digOneFunc,
 		DigRepeatParams: digRepeatParamsSlice,
 		GlobalTimeout:   globalTimeout,
 		NameserverNames: nameserverNames,

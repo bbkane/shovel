@@ -1,6 +1,7 @@
 package digcombine
 
 import (
+	"context"
 	"net"
 	"net/netip"
 	"testing"
@@ -21,7 +22,7 @@ func Test_parseCmdCtx(t *testing.T) {
 	}{
 		{
 			name:   "noSubnet",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedParsed: &parsedCmdCtx{
 				DigRepeatParams: []dig.DigRepeatParams{
@@ -47,7 +48,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "subnetPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"1.2.3.0"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"1.2.3.0"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -73,14 +74,14 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "badSubnetPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"badSubnet"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"badSubnet"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr:    true,
 			expectedParsed: nil,
 		},
 		{
 			name:   "subnetFromMap",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"mysubnet"}, "--subnet-map": map[string]netip.Addr{"mysubnet": netip.MustParseAddr("3.4.5.0")}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"mysubnet"}, "--subnet-map": map[string]netip.Addr{"mysubnet": netip.MustParseAddr("3.4.5.0")}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -106,7 +107,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "subnetAll",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"all"}, "--subnet-map": map[string]netip.Addr{"subnetName": netip.MustParseAddr("1.1.1.0")}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"all"}, "--subnet-map": map[string]netip.Addr{"subnetName": netip.MustParseAddr("1.1.1.0")}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -132,7 +133,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "subnetNone",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"none"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"none"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -159,7 +160,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		// --ns tests!
 		{
 			name:   "nsPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -185,14 +186,14 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "badNSPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"badns"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"badns"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr:    true,
 			expectedParsed: nil,
 		},
 		{
 			name:   "nsFromMap",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"nsFromMap"}, "--nameserver-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"nsFromMap"}, "--nameserver-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -218,7 +219,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "nsAll",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"all"}, "--nameserver-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"all"}, "--nameserver-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -244,7 +245,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:   "namedNameserver",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"dns1.p09.nsone.net.:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx: command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"dns1.p09.nsone.net.:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 
 			expectedErr: false,
 			expectedParsed: &parsedCmdCtx{
@@ -270,7 +271,7 @@ func Test_parseCmdCtx(t *testing.T) {
 		},
 		{
 			name:           "namedNameserverErr",
-			cmdCtx:         command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"dns1.p09.nsone.net.53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
+			cmdCtx:         command.Context{Context: context.Background(), Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--nameserver": []string{"dns1.p09.nsone.net.53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
 			expectedErr:    true,
 			expectedParsed: nil,
 		},
