@@ -207,51 +207,33 @@ func serveCmd(digFooter string) command.Command {
 			"--otel-provider",
 			"Enable tracing with OpenObserve",
 			scalar.String(
-				scalar.Choices("open-observe", "stdout"),
+				scalar.Choices("openobserve", "stdout"),
 				scalar.Default("stdout"),
 			),
 			flag.Required(),
 			flag.ConfigPath("serve.otel.provider"),
 		),
 		command.Flag(
-			"--open-observe-endpoint",
+			"--openobserve-endpoint",
 			"Endpoint to send traces to",
 			scalar.AddrPort(
 				scalar.Default(netip.MustParseAddrPort("127.0.0.1:5080")),
 			),
-			flag.ConfigPath("serve.open-observe.endpoint"),
+			flag.ConfigPath("serve.openobserve.endpoint"),
 		),
 		command.Flag(
-			"--open-observe-user",
+			"--openobserve-user",
 			"OpenObserve Username",
 			scalar.String(),
-			flag.ConfigPath("serve.open-observe.user"),
+			flag.ConfigPath("serve.openobserve.user"),
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_USER"),
 		),
 		command.Flag(
-			"--open-observe-pass",
+			"--openobserve-pass",
 			"OpenObserve Password",
 			scalar.String(),
-			flag.ConfigPath("serve.open-observe.pass"),
+			flag.ConfigPath("serve.openobserve.pass"),
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_PASS"),
-		),
-		command.Flag(
-			"--otel-service-name",
-			"OpenObserve Service Name",
-			scalar.String(
-				scalar.Default("shovel serve"),
-			),
-			flag.ConfigPath("serve.otel.service-name"),
-			flag.Required(),
-		),
-		command.Flag(
-			"--otel-service-version",
-			"OpenObserve Service Version - TODO: read from shovel binary",
-			scalar.String(
-				scalar.Default("TODO"),
-			),
-			flag.ConfigPath("serve.otel.service-version"),
-			flag.Required(),
 		),
 		command.Flag(
 			"--otel-service-env",
