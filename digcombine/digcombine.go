@@ -117,20 +117,20 @@ func ParseSubnets(passedSubnets []string, subnetMap map[string]net.IP) ([]net.IP
 	return parsed, subnetToName, nil
 }
 
-func ParseNameservers(nameserverStrs []string, nameserverMap map[string]string) ([]string, map[string]string, error) {
+func ParseNameservers(passedNameservers []string, nameserverMap map[string]string) ([]string, map[string]string, error) {
 	// nameservers
 	var nameservers []string
 	nameserverNames := make(map[string]string)
 
 	// if --ns all is the only thing passed, add all nameservers from the map
-	if len(nameserverStrs) == 1 && nameserverStrs[0] == "all" && len(nameserverMap) > 0 {
-		nameserverStrs = []string{}
+	if len(passedNameservers) == 1 && passedNameservers[0] == "all" && len(nameserverMap) > 0 {
+		passedNameservers = []string{}
 		for key := range nameserverMap {
-			nameserverStrs = append(nameserverStrs, key)
+			passedNameservers = append(passedNameservers, key)
 		}
 	}
 
-	for _, nameserverStr := range nameserverStrs {
+	for _, nameserverStr := range passedNameservers {
 		// check in map
 		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
 			nameservers = append(nameservers, nsAddrPort)
@@ -193,15 +193,15 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 	// It would be nice if Go was kind enough to panic...
 	nameserverMap, _ := cmdCtx.Flags["--nameserver-map"].(map[string]string)
 
-	nameserverStrs := cmdCtx.Flags["--nameserver"].([]string)
+	passedNameservers := cmdCtx.Flags["--nameserver"].([]string)
 
-	nameservers, nameserverNames, err := ParseNameservers(nameserverStrs, nameserverMap)
+	parsedNameservers, nameserverToName, err := ParseNameservers(passedNameservers, nameserverMap)
 	if err != nil {
 		return nil, err
 	}
 
 	digRepeatParamsSlice := dig.CombineDigRepeatParams(
-		nameservers,
+		parsedNameservers,
 		proto,
 		qnames,
 		rtypes,
@@ -217,7 +217,7 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		Dig:             digOneFunc,
 		DigRepeatParams: digRepeatParamsSlice,
 		GlobalTimeout:   globalTimeout,
-		NameserverNames: nameserverNames,
+		NameserverNames: nameserverToName,
 		Stdout:          cmdCtx.Stdout,
 		SubnetToName:    subnetToName,
 	}, nil
