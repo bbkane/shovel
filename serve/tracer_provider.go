@@ -94,7 +94,6 @@ func initStdoutTracerProvider(tracerArgs tracerResourceArgs) (*sdktrace.TracerPr
 	)
 
 	exporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint(),
 		stdouttrace.WithWriter(os.Stdout),
 	)
 	if err != nil {

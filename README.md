@@ -53,73 +53,35 @@ scoop install bbkane/shovel
 
 See [Go Developer Tooling](https://www.bbkane.com/blog/go-developer-tooling/) for notes on development tooling.
 
-# Running with `systemd`
+## Run the webapp locally with [OpenObserve](https://openobserve.ai/)
 
-> ***This is very much a work in progress***
-
-Folder hierarchy:
-
-```
-/etc/bkane/<service>/<version>
-```
-
-And that can hold things like executables, data, unit files, and config.
+Export env vars:
 
 ```bash
-sudo mkdir -p /etc/bkane/shovel/v0.0.9
+export SHOVEL_SERVE_OPENOBSERVE_PASS='...';
+export SHOVEL_SERVE_OPENOBSERVE_USER='...';
+export ZO_ROOT_USER_EMAIL='...';
+export ZO_ROOT_USER_PASSWORD='...';
 ```
 
-TODO: `shovel version` shows `0.0.9` instead of `v0.0.9`...
-
-```ini
-[Unit]
-Description=Shovel DNS query frontend
-After=syslog.target network-online.target remote-fs.target nss-lookup.target
-
-[Service]
-Type=simple
-ExecStart=/home/linuxbrew/.linuxbrew/bin/shovel serve --config /etc/bkane/shovel/v0.0.9/shovel.yaml
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```
-serve:
-  addr-port:  0.0.0.0:8080
-  http-origin: http://bkane-ld2:8080
-```
+Run OpenObserve (in another terminal) after downloading:
 
 ```bash
-sudo systemctl enable /etc/bkane/shovel/v0.0.9/shovel.service
+./openobserve
 ```
+
+Open OpenObserve at: http://localhost:5080/web/traces?period=15m&query=&org_identifier=default
+
+Run shovel. Check `go run . serve --help` to see all flags available
 
 ```bash
-sudo systemctl start shovel
+go run . serve \
+  --otel-provider openobserve
 ```
 
-```bash
-sudo systemctl status shovel
-```
+Open shovel at: http://127.0.0.1:8080/?count=1&nameservers=dns3.p09.nsone.net%3A53&protocol=udp&qnames=linkedin.com+www.linkedin.com&rtypes=A&subnetMap=&subnets=
 
-```bash
-sudo journalctl -u shovel
-```
-
-[How to modify an existing systemd unit file | 2DayGeek](https://www.2daygeek.com/linux-modifying-existing-systemd-unit-file/)
-
-```bash
-sudo systemctl daemon-reload
-```
-
-```bash
-sudo systemctl restart shovel
-```
-
-TODO: test reboots, add security to unit file, PR to shovel docs or blog post about systemd
-
-TODO: https://www.freedesktop.org/software/systemd/man/systemd-analyze.html . See `systemd-analyze verify|security`
+Install shovel + OpenObserve as systemd services, on a local dev VM or production VM with [shovel_ansible](https://github.com/bbkane/shovel_ansible/)
 
 ## Dev Notes
 

@@ -2,314 +2,145 @@ package digcombine
 
 import (
 	"net"
-	"net/netip"
 	"testing"
-	"time"
 
-	"github.com/miekg/dns"
 	"github.com/stretchr/testify/require"
-	"go.bbkane.com/shovel/dig"
-	"go.bbkane.com/warg/command"
 )
 
-func Test_parseCmdCtx(t *testing.T) {
+func TestParseNameservers(t *testing.T) {
 	tests := []struct {
-		name           string
-		cmdCtx         command.Context
-		expectedParsed *parsedCmdCtx
-		expectedErr    bool
+		name                    string
+		passedNameservers       []string
+		nameserverMap           map[string]string
+		expectedNameservers     []string
+		expectedNameserverNames map[string]string
+		expectedErr             bool
 	}{
 		{
-			name:   "noSubnet",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "198.51.45.9:53",
-							SubnetIP:         nil,
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
-				SubnetToName:    nil,
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-			expectedErr: false,
+			name:                    "nsPassedAsArg",
+			passedNameservers:       []string{"198.51.45.9:53"},
+			nameserverMap:           nil,
+			expectedNameservers:     []string{"198.51.45.9:53"},
+			expectedNameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
+			expectedErr:             false,
 		},
 		{
-			name:   "subnetPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"1.2.3.0"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "198.51.45.9:53",
-							SubnetIP:         net.ParseIP("1.2.3.0"),
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
-				SubnetToName:    map[string]string{"1.2.3.0": "passed ip"},
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
+			name:                    "badNSPassedAsArg",
+			passedNameservers:       []string{"badns"},
+			nameserverMap:           nil,
+			expectedNameservers:     nil,
+			expectedNameserverNames: nil,
+			expectedErr:             true,
 		},
 		{
-			name:   "badSubnetPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"badSubnet"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr:    true,
-			expectedParsed: nil,
+			name:                    "nsFromMap",
+			passedNameservers:       []string{"nsFromMap"},
+			nameserverMap:           map[string]string{"nsFromMap": "1.2.3.4:53"},
+			expectedNameservers:     []string{"1.2.3.4:53"},
+			expectedNameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
+			expectedErr:             false,
 		},
 		{
-			name:   "subnetFromMap",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"mysubnet"}, "--subnet-map": map[string]netip.Addr{"mysubnet": netip.MustParseAddr("3.4.5.0")}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "198.51.45.9:53",
-							SubnetIP:         net.ParseIP("3.4.5.0"),
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
-				SubnetToName:    map[string]string{"3.4.5.0": "mysubnet"},
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
+			name:                    "nsAll",
+			passedNameservers:       []string{"all"},
+			nameserverMap:           map[string]string{"nsFromMap": "1.2.3.4:53"},
+			expectedNameservers:     []string{"1.2.3.4:53"},
+			expectedNameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
+			expectedErr:             false,
 		},
 		{
-			name:   "subnetAll",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"all"}, "--subnet-map": map[string]netip.Addr{"subnetName": netip.MustParseAddr("1.1.1.0")}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "1.2.3.4:53",
-							SubnetIP:         net.ParseIP("1.1.1.0"),
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"1.2.3.4:53": "passed ns:port"},
-				SubnetToName:    map[string]string{"1.1.1.0": "subnetName"},
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-		},
-		{
-			name:   "subnetNone",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--subnet": []string{"none"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "1.2.3.4:53",
-							SubnetIP:         nil,
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"1.2.3.4:53": "passed ns:port"},
-				SubnetToName:    map[string]string{"<nil>": "none"},
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-		},
-		// --ns tests!
-		{
-			name:   "nsPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"198.51.45.9:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "198.51.45.9:53",
-							SubnetIP:         nil,
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"198.51.45.9:53": "passed ns:port"},
-				SubnetToName:    nil,
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-		},
-		{
-			name:   "badNSPassedAsArg",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"badns"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr:    true,
-			expectedParsed: nil,
-		},
-		{
-			name:   "nsFromMap",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"nsFromMap"}, "--nameserver-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "1.2.3.4:53",
-							SubnetIP:         nil,
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
-				SubnetToName:    nil,
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-		},
-		{
-			name:   "nsAll",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"all"}, "--nameserver-map": map[string]string{"nsFromMap": "1.2.3.4:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "1.2.3.4:53",
-							SubnetIP:         nil,
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"1.2.3.4:53": "nsFromMap"},
-				SubnetToName:    nil,
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-		},
-		{
-			name:   "namedNameserver",
-			cmdCtx: command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"dns1.p09.nsone.net.:53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-
-			expectedErr: false,
-			expectedParsed: &parsedCmdCtx{
-				DigRepeatParams: []dig.DigRepeatParams{
-					{
-						DigOneParams: dig.DigOneParams{
-							Qname:            "linkedin.com",
-							Rtype:            dns.TypeA,
-							NameserverIPPort: "dns1.p09.nsone.net.:53",
-							SubnetIP:         nil,
-							Timeout:          0,
-							Proto:            "udp",
-						},
-						Count: 1,
-					},
-				},
-				NameserverNames: map[string]string{"dns1.p09.nsone.net.:53": "passed ns:port"},
-				SubnetToName:    nil,
-				Dig:             nil,
-				Stdout:          nil,
-				GlobalTimeout:   2 * time.Second,
-			},
-		},
-		{
-			name:           "namedNameserverErr",
-			cmdCtx:         command.Context{Flags: command.PassedFlags{"--color": "auto", "--config": "", "--count": 1, "--qname": []string{"linkedin.com"}, "--help": "default", "--mock-dig-func": "none", "--nameserver": []string{"dns1.p09.nsone.net.53"}, "--protocol": "udp", "--rtype": []string{"A"}, "--global-timeout": 2 * time.Second}, Stderr: nil, Stdout: nil},
-			expectedErr:    true,
-			expectedParsed: nil,
+			name:                    "namedNameserverErr",
+			passedNameservers:       []string{"dns1.p09.nsone.net.53"},
+			nameserverMap:           nil,
+			expectedNameservers:     nil,
+			expectedNameserverNames: nil,
+			expectedErr:             true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			actualParsed, actualErr := parseCmdCtx(tt.cmdCtx)
+			actualNameservers, actualNameserverNames, actualErr := ParseNameservers(tt.passedNameservers, tt.nameserverMap)
 			if tt.expectedErr {
 				require.NotNil(t, actualErr)
-				return
 			} else {
 				require.Nil(t, actualErr)
 			}
+			require.Equal(t, tt.expectedNameservers, actualNameservers, "nameservers")
+			require.Equal(t, tt.expectedNameserverNames, actualNameserverNames)
+		})
+	}
+}
 
-			// Functions can't always compare false, so nil Dig out
-			actualParsed.Dig = nil
-			// I also don't want to mess with os Files
-			actualParsed.Stdout = nil
+func TestParseSubnets(t *testing.T) {
+	tests := []struct {
+		name                string
+		passedSubnets       []string
+		subnetMap           map[string]net.IP
+		expectedSubnets     []net.IP
+		expectedSubnetNames map[string]string
+		expectedErr         bool
+	}{
+		{
+			name:                "noSubnet",
+			passedSubnets:       nil,
+			subnetMap:           nil,
+			expectedSubnets:     []net.IP{nil},
+			expectedSubnetNames: nil,
+			expectedErr:         false,
+		},
+		{
+			name:                "subnetPassedAsArg",
+			passedSubnets:       []string{"1.2.3.0"},
+			subnetMap:           nil,
+			expectedSubnets:     []net.IP{net.ParseIP("1.2.3.0")},
+			expectedSubnetNames: map[string]string{"1.2.3.0": "passed ip"},
+			expectedErr:         false,
+		},
+		{
+			name:                "badSubnetPassedAsArg",
+			passedSubnets:       []string{"badSubnet"},
+			subnetMap:           nil,
+			expectedSubnets:     nil,
+			expectedSubnetNames: nil,
+			expectedErr:         true,
+		},
+		{
+			name:                "subnetFromMap",
+			passedSubnets:       []string{"mysubnet"},
+			subnetMap:           map[string]net.IP{"mysubnet": net.ParseIP("3.4.5.0")},
+			expectedSubnets:     []net.IP{net.ParseIP("3.4.5.0")},
+			expectedSubnetNames: map[string]string{"3.4.5.0": "mysubnet"},
+			expectedErr:         false,
+		},
+		{
+			name:                "subnetAll",
+			passedSubnets:       []string{"all"},
+			subnetMap:           map[string]net.IP{"subnetName": net.ParseIP("1.1.1.0")},
+			expectedSubnets:     []net.IP{net.ParseIP("1.1.1.0")},
+			expectedSubnetNames: map[string]string{"1.1.1.0": "subnetName"},
+			expectedErr:         false,
+		},
+		{
+			name:                "subnetNone",
+			passedSubnets:       nil,
+			subnetMap:           nil,
+			expectedSubnets:     []net.IP{nil},
+			expectedSubnetNames: nil,
+			expectedErr:         false,
+		},
+	}
 
-			// Test subnets individually since they cannot be compared with '=='
-			require.Equal(t, len(tt.expectedParsed.DigRepeatParams), len(actualParsed.DigRepeatParams))
-			for i := 0; i < len(tt.expectedParsed.DigRepeatParams); i++ {
-				if !tt.expectedParsed.DigRepeatParams[i].DigOneParams.SubnetIP.Equal(
-					actualParsed.DigRepeatParams[i].DigOneParams.SubnetIP,
-				) {
-					t.Fatalf(
-						"Expected equal subnets for index %d: %v != %v",
-						i,
-						tt.expectedParsed.DigRepeatParams[i].DigOneParams.SubnetIP,
-						actualParsed.DigRepeatParams[i].DigOneParams.SubnetIP,
-					)
-				}
-				// now set to nil!
-				tt.expectedParsed.DigRepeatParams[i].DigOneParams.SubnetIP = nil
-				actualParsed.DigRepeatParams[i].DigOneParams.SubnetIP = nil
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actualSubnets, actualSubnetNames, actualErr := ParseSubnets(tt.passedSubnets, tt.subnetMap)
+			if tt.expectedErr {
+				require.NotNil(t, actualErr)
+			} else {
+				require.Nil(t, actualErr)
 			}
-			require.Equal(t, tt.expectedParsed, actualParsed)
-
+			require.Equal(t, tt.expectedSubnets, actualSubnets, "subnets")
+			require.Equal(t, tt.expectedSubnetNames, actualSubnetNames, "subnetNames")
 		})
 	}
 }

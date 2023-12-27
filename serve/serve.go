@@ -11,6 +11,7 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -100,26 +101,32 @@ func Run(cmdCtx command.Context) error {
 
 	var tp *sdktrace.TracerProvider
 	var tpErr error
+
+	serviceName := []string{cmdCtx.AppName}
+	serviceName = append(serviceName, cmdCtx.Path...)
 	tracerArgs := tracerResourceArgs{
-		ServiceName:        cmdCtx.Flags["--otel-service-name"].(string),
-		ServiceVersion:     cmdCtx.Flags["--otel-service-version"].(string),
+		ServiceName:        strings.Join(serviceName, " "),
+		ServiceVersion:     cmdCtx.Version,
 		ServiceEnvironment: cmdCtx.Flags["--otel-service-env"].(string),
 	}
+
 	switch otelProvider {
-	case "open-observe":
-		for _, name := range []string{"--open-observe-endpoint", "--open-observe-user", "--open-observe-pass"} {
+	case "openobserve":
+		for _, name := range []string{"--openobserve-endpoint", "--openobserve-user", "--openobserve-pass"} {
 			if _, exists := cmdCtx.Flags[name]; !exists {
 				return errors.New("--otel-provider requires this flag to be set: " + name)
 			}
 		}
 		httpTracerParams := initHTTPTracerProviderParams{
-			Endpoint: cmdCtx.Flags["--open-observe-endpoint"].(netip.AddrPort),
-			User:     cmdCtx.Flags["--open-observe-user"].(string),
-			Password: cmdCtx.Flags["--open-observe-pass"].(string),
+			Endpoint: cmdCtx.Flags["--openobserve-endpoint"].(netip.AddrPort),
+			User:     cmdCtx.Flags["--openobserve-user"].(string),
+			Password: cmdCtx.Flags["--openobserve-pass"].(string),
 		}
 		tp, tpErr = initHTTPTracerProvider(httpTracerParams, tracerArgs)
 	case "stdout":
 		tp, tpErr = initStdoutTracerProvider(tracerArgs)
+	default:
+		return fmt.Errorf("unknown --otel-provider: %v", otelProvider)
 	}
 
 	if tpErr != nil {
@@ -165,6 +172,7 @@ func Run(cmdCtx command.Context) error {
 	s := &server{
 		HTTPOrigin: httpOrigin,
 		Motd:       motd,
+		Version:    cmdCtx.Version,
 	}
 
 	addRoutes(e, s)

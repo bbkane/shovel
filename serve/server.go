@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/shovel/digcombine"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // splitFormValue splits by " " and removes "" from output slice
@@ -34,6 +35,9 @@ type server struct {
 
 	// Motd - message of the day
 	Motd string
+
+	// Version of our software
+	Version string
 }
 
 func (s *server) Submit(c echo.Context) error {
@@ -105,8 +109,16 @@ func (s *server) Submit(c echo.Context) error {
 	// This only works for GET
 	// filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
 
+	// NOTE: I'm not sure whether the correct HTTP origin can be read from the request. So let's try a few different ways to get it and control them with a flag so I can easily revert in "prod". if I can confirm that "request.Host" works, I can remove the flag and just use c.Request().Host by default. TODO: when I clean this up, also figure out how to get whether the proto is HTTP or HTTPS
+	var httpOrigin string
+	switch s.HTTPOrigin {
+	case "request.Host":
+		httpOrigin = "http://" + c.Request().Host
+	default:
+		httpOrigin = s.HTTPOrigin
+	}
 	// This works for POST and I think it works for GET too?
-	filledFormURL := s.HTTPOrigin + "/?" + c.Request().Form.Encode()
+	filledFormURL := httpOrigin + "/?" + c.Request().Form.Encode()
 
 	t := buildTable(buildTableParams{
 		Qnames:        qnames,
@@ -116,6 +128,7 @@ func (s *server) Submit(c echo.Context) error {
 		ResMul:        resMul,
 		SubnetToName:  subnetToName,
 		FilledFormURL: filledFormURL,
+		TraceID:       trace.SpanContextFromContext(c.Request().Context()).TraceID().String(),
 	})
 
 	return c.Render(http.StatusOK, "submit.html", t)
@@ -132,7 +145,17 @@ func (s *server) Index(c echo.Context) error {
 		SubnetMap   string
 		Subnets     string
 
-		Motd string
+		Motd       string
+		Version    string
+		VersionURL string
+	}
+
+	var versionURL string
+	switch s.Version {
+	case "(devel)":
+		versionURL = "https://github.com/bbkane/shovel"
+	default:
+		versionURL = "https://github.com/bbkane/shovel/tree/" + s.Version
 	}
 
 	f := indexData{
@@ -144,6 +167,8 @@ func (s *server) Index(c echo.Context) error {
 		SubnetMap:   c.FormValue("subnetMap"),
 		Subnets:     c.FormValue("subnets"),
 		Motd:        s.Motd,
+		Version:     s.Version,
+		VersionURL:  versionURL,
 	}
 	return c.Render(http.StatusOK, "index.html", f)
 }

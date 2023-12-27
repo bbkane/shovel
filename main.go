@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/netip"
-	"os"
 	"time"
 
 	"go.bbkane.com/shovel/digcombine"
@@ -93,14 +92,6 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.combine.global-timeout"),
 		),
 		command.Flag(
-			"--mock-dig-func",
-			"Flag to mock dig func. Used only for testing",
-			scalar.String(
-				scalar.Default("none"),
-			),
-			flag.Required(),
-		),
-		command.Flag(
 			"--protocol",
 			"Protocol to use when digging",
 			scalar.String(
@@ -134,14 +125,6 @@ func digListCmd(digFooter string) command.Command {
 			flag.ConfigPath("dig.list[].qname"),
 			flag.Required(),
 			flag.Alias("-q"),
-		),
-		command.Flag(
-			"--mock-dig-func",
-			"Flag to mock dig func. Used only for testing",
-			scalar.String(
-				scalar.Default("none"),
-			),
-			flag.Required(),
 		),
 		command.Flag(
 			"--nameserver",
@@ -224,51 +207,33 @@ func serveCmd(digFooter string) command.Command {
 			"--otel-provider",
 			"Enable tracing with OpenObserve",
 			scalar.String(
-				scalar.Choices("open-observe", "stdout"),
+				scalar.Choices("openobserve", "stdout"),
 				scalar.Default("stdout"),
 			),
 			flag.Required(),
 			flag.ConfigPath("serve.otel.provider"),
 		),
 		command.Flag(
-			"--open-observe-endpoint",
+			"--openobserve-endpoint",
 			"Endpoint to send traces to",
 			scalar.AddrPort(
 				scalar.Default(netip.MustParseAddrPort("127.0.0.1:5080")),
 			),
-			flag.ConfigPath("serve.open-observe.endpoint"),
+			flag.ConfigPath("serve.openobserve.endpoint"),
 		),
 		command.Flag(
-			"--open-observe-user",
+			"--openobserve-user",
 			"OpenObserve Username",
 			scalar.String(),
-			flag.ConfigPath("serve.open-observe.user"),
+			flag.ConfigPath("serve.openobserve.user"),
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_USER"),
 		),
 		command.Flag(
-			"--open-observe-pass",
+			"--openobserve-pass",
 			"OpenObserve Password",
 			scalar.String(),
-			flag.ConfigPath("serve.open-observe.pass"),
+			flag.ConfigPath("serve.openobserve.pass"),
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_PASS"),
-		),
-		command.Flag(
-			"--otel-service-name",
-			"OpenObserve Service Name",
-			scalar.String(
-				scalar.Default("shovel serve"),
-			),
-			flag.ConfigPath("serve.otel.service-name"),
-			flag.Required(),
-		),
-		command.Flag(
-			"--otel-service-version",
-			"OpenObserve Service Version - TODO: read from shovel binary",
-			scalar.String(
-				scalar.Default("TODO"),
-			),
-			flag.ConfigPath("serve.otel.service-version"),
-			flag.Required(),
 		),
 		command.Flag(
 			"--otel-service-env",
@@ -291,6 +256,13 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 		"shovel",
 		section.New(
 			"Query DNS and count results",
+			section.ExistingCommand(
+				"serve",
+				serveCmd(digFooter),
+			),
+			section.ExistingFlag("--color", warg.ColorFlag()),
+			section.ExistingCommand("version", warg.VersionCommand()),
+			section.Footer(digFooter),
 			section.Section(
 				"dig",
 				"Dig in different ways",
@@ -303,14 +275,8 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 					digListCmd(digFooter),
 				),
 			),
-			section.ExistingCommand(
-				"serve",
-				serveCmd(digFooter),
-			),
-			section.Footer(digFooter),
 		),
-		warg.AddColorFlag(),
-		warg.AddVersionCommand(version),
+		warg.OverrideVersion(version),
 		warg.ConfigFlag(
 			"--config",
 			[]scalar.ScalarOpt[string]{
@@ -325,6 +291,5 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 
 func main() {
 	app := buildApp()
-	// app.MustRun([]string{"shovel", "dig", "--rtype", "A"}, os.LookupEnv)
-	app.MustRun(os.Args, os.LookupEnv)
+	app.MustRun()
 }

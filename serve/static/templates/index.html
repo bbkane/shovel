@@ -13,7 +13,7 @@
 {{$f := .}}
 
 <body>
-  <h1>Shovel</h1>
+  <h1>Shovel - <a href="{{$f.VersionURL}}" target="_blank">{{$f.Version}}</a></h1>
 
   {{if $f.Motd }}
   <p id="motd">{{$f.Motd}}</p>

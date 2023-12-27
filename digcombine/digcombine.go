@@ -31,30 +31,6 @@ func validateNameserverStr(nameserverStr string) error {
 	return nil
 }
 
-func getDigFunc(name string) dig.DigOneFunc {
-	digs := map[string]dig.DigOneFunc{
-		"none": dig.DigOne,
-		"simple": dig.DigOneFuncMock(
-			context.Background(),
-			[]dig.DigOneResult{
-				{Answers: []string{"1.2.3.4"}, Err: nil},
-			},
-		),
-		"twocount": dig.DigOneFuncMock(
-			context.Background(),
-			[]dig.DigOneResult{
-				{Answers: []string{"1.2.3.4"}, Err: nil},
-				{Answers: []string{"1.2.3.4"}, Err: nil},
-			},
-		),
-	}
-	dig, exists := digs[name]
-	if !exists {
-		panic("could not find dig func: " + name)
-	}
-	return dig
-}
-
 type parsedCmdCtx struct {
 	Dig             dig.DigOneFunc
 	DigRepeatParams []dig.DigRepeatParams
@@ -80,7 +56,7 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 // a map of stringified subnet to name, and an error.
 // It uses the following rules:
 //
-//   - If passedSubnets is empty, returns []net.IP{nil}.
+//   - If passedSubnets is empty, returns []net.IP{nil}. Return this instead of nil directly because we'll want to range over the returned list
 //
 //   - If passedSubnets == {"all"} and we have a non-empty subnetMap, return everything in subnetMap.
 //
@@ -141,6 +117,44 @@ func ParseSubnets(passedSubnets []string, subnetMap map[string]net.IP) ([]net.IP
 	return parsed, subnetToName, nil
 }
 
+func ParseNameservers(passedNameservers []string, nameserverMap map[string]string) ([]string, map[string]string, error) {
+	// nameservers
+	var nameservers []string
+	nameserverNames := make(map[string]string)
+
+	// if --ns all is the only thing passed, add all nameservers from the map
+	if len(passedNameservers) == 1 && passedNameservers[0] == "all" && len(nameserverMap) > 0 {
+		passedNameservers = []string{}
+		for key := range nameserverMap {
+			passedNameservers = append(passedNameservers, key)
+		}
+	}
+
+	for _, nameserverStr := range passedNameservers {
+		// check in map
+		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
+			nameservers = append(nameservers, nsAddrPort)
+			nameserverNames[nsAddrPort] = nameserverStr
+		} else {
+			// use directly
+			nameservers = append(nameservers, nameserverStr)
+			nameserverNames[nameserverStr] = "passed ns:port"
+		}
+	}
+	for _, nameserver := range nameservers {
+		err := validateNameserverStr(nameserver)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error in nameserver: %s: %w", nameserver, err)
+		}
+	}
+
+	if len(nameservers) == 0 {
+		return nil, nil, errors.New("no nameservers passed")
+	}
+
+	return nameservers, nameserverNames, nil
+}
+
 func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 
 	// simple params
@@ -156,8 +170,10 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		return nil, fmt.Errorf("couldn't parse cmdCtx: %w", err)
 	}
 
-	mockDigFuncStr := cmdCtx.Flags["--mock-dig-func"].(string)
-	digFunc := getDigFunc(mockDigFuncStr)
+	var digOneFunc dig.DigOneFunc = dig.DigOne
+	if replacementDigOneFunc := cmdCtx.Context.Value(dig.DigOneFuncCtxKey{}); replacementDigOneFunc != nil {
+		digOneFunc = replacementDigOneFunc.(dig.DigOneFunc)
+	}
 
 	// subnet
 	nameToSubnetNetIPAddr, _ := cmdCtx.Flags["--subnet-map"].(map[string]netip.Addr)
@@ -173,49 +189,19 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		return nil, fmt.Errorf("couldn't parse subnets: %w", err)
 	}
 
-	// nameservers
-	var nameservers []string
-	nameserverNames := make(map[string]string)
-
 	// NOTE: if the wrong types are asserted, the resulting map is nil...
 	// It would be nice if Go was kind enough to panic...
 	nameserverMap, _ := cmdCtx.Flags["--nameserver-map"].(map[string]string)
 
-	// These might be names Or IP:Port, so let's not use this slice directly
-	nameserverStrs := cmdCtx.Flags["--nameserver"].([]string)
+	passedNameservers := cmdCtx.Flags["--nameserver"].([]string)
 
-	// if --ns all is the only thing passed, add all nameservers from the map
-	if len(nameserverStrs) == 1 && nameserverStrs[0] == "all" && len(nameserverMap) > 0 {
-		nameserverStrs = []string{}
-		for key := range nameserverMap {
-			nameserverStrs = append(nameserverStrs, key)
-		}
-	}
-
-	for _, nameserverStr := range nameserverStrs {
-		// check in map
-		if nsAddrPort, exists := nameserverMap[nameserverStr]; exists {
-			nameservers = append(nameservers, nsAddrPort)
-			nameserverNames[nsAddrPort] = nameserverStr
-		} else {
-			// use directly
-			nameservers = append(nameservers, nameserverStr)
-			nameserverNames[nameserverStr] = "passed ns:port"
-		}
-	}
-	for _, nameserver := range nameservers {
-		err := validateNameserverStr(nameserver)
-		if err != nil {
-			return nil, fmt.Errorf("error in nameserver: %s: %w", nameserver, err)
-		}
-	}
-
-	if len(nameservers) == 0 {
-		return nil, errors.New("no nameservers passed")
+	parsedNameservers, nameserverToName, err := ParseNameservers(passedNameservers, nameserverMap)
+	if err != nil {
+		return nil, err
 	}
 
 	digRepeatParamsSlice := dig.CombineDigRepeatParams(
-		nameservers,
+		parsedNameservers,
 		proto,
 		qnames,
 		rtypes,
@@ -223,11 +209,15 @@ func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
 		count,
 	)
 
+	if len(digRepeatParamsSlice) < 1 {
+		return nil, errors.New("no dig parameters passed")
+	}
+
 	return &parsedCmdCtx{
-		Dig:             digFunc,
+		Dig:             digOneFunc,
 		DigRepeatParams: digRepeatParamsSlice,
 		GlobalTimeout:   globalTimeout,
-		NameserverNames: nameserverNames,
+		NameserverNames: nameserverToName,
 		Stdout:          cmdCtx.Stdout,
 		SubnetToName:    subnetToName,
 	}, nil
@@ -281,10 +271,6 @@ func Run(cmdCtx command.Context) error {
 	parsed, err := parseCmdCtx(cmdCtx)
 	if err != nil {
 		return err
-	}
-
-	if len(parsed.DigRepeatParams) < 1 {
-		return errors.New("no dig parameters passed")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), parsed.GlobalTimeout)

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"os"
 	"testing"
 
+	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/warg"
 )
 
@@ -21,10 +23,10 @@ func TestRunCLI(t *testing.T) {
 		t.Log("To update golden files, run: SHOVEL_TEST_UPDATE_GOLDEN=1 go test ./... ")
 	}
 	tests := []struct {
-		name   string
-		app    warg.App
-		args   []string
-		lookup warg.LookupFunc
+		name       string
+		app        warg.App
+		args       []string
+		digOneFunc dig.DigOneFunc
 	}{
 		{
 			name: "simple",
@@ -33,11 +35,15 @@ func TestRunCLI(t *testing.T) {
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "1",
 				"--qname", "linkedin.com",
-				"--mock-dig-func", "simple", // don't really dig!
 				"--nameserver", "0.0.0.0:53",
 				"--rtype", "A",
 			},
-			lookup: warg.LookupMap(nil),
+			digOneFunc: dig.DigOneFuncMock(
+				context.Background(),
+				[]dig.DigOneResult{
+					{Answers: []string{"1.2.3.4"}, Err: nil},
+				},
+			),
 		},
 		{
 			name: "twocount",
@@ -46,17 +52,29 @@ func TestRunCLI(t *testing.T) {
 				"--config", "notthere", // Hack so shovel doesn't try to read a config
 				"--count", "2",
 				"--qname", "linkedin.com",
-				"--mock-dig-func", "twocount", // don't really dig!
 				"--nameserver", "0.0.0.0:53",
 				"--rtype", "A",
 			},
-			lookup: warg.LookupMap(nil),
+			digOneFunc: dig.DigOneFuncMock(
+				context.Background(),
+				[]dig.DigOneResult{
+					{Answers: []string{"1.2.3.4"}, Err: nil},
+					{Answers: []string{"1.2.3.4"}, Err: nil},
+				},
+			),
 		},
 	}
 
 	for _, tt := range tests {
+		ctx := context.WithValue(context.Background(), dig.DigOneFuncCtxKey{}, tt.digOneFunc)
 		t.Run(tt.name, func(t *testing.T) {
-			warg.GoldenTest(t, tt.app, tt.args, tt.lookup, updateGolden)
+			warg.GoldenTest(
+				t,
+				tt.app,
+				updateGolden,
+				warg.OverrideArgs(tt.args),
+				warg.AddContext(ctx),
+			)
 		})
 	}
 }

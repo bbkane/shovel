@@ -1,11 +1,12 @@
 module go.bbkane.com/shovel
 
-// Will update this to go 1.20 when https://github.com/Homebrew/homebrew-core/pull/122082 lands
-go 1.20
+go 1.21
+
+toolchain go1.21.4
 
 require (
 	go.bbkane.com/gocolor v0.0.5 // indirect
-	go.bbkane.com/warg v0.0.20
+	go.bbkane.com/warg v0.0.22
 )
 
 require (
@@ -49,7 +50,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
