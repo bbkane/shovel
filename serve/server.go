@@ -35,6 +35,9 @@ type server struct {
 
 	// Motd - message of the day
 	Motd string
+
+	// Version of our software
+	Version string
 }
 
 func (s *server) Submit(c echo.Context) error {
@@ -142,7 +145,17 @@ func (s *server) Index(c echo.Context) error {
 		SubnetMap   string
 		Subnets     string
 
-		Motd string
+		Motd       string
+		Version    string
+		VersionURL string
+	}
+
+	var versionURL string
+	switch s.Version {
+	case "(devel)":
+		versionURL = "https://github.com/bbkane/shovel"
+	default:
+		versionURL = "https://github.com/bbkane/shovel/tree/" + s.Version
 	}
 
 	f := indexData{
@@ -154,6 +167,8 @@ func (s *server) Index(c echo.Context) error {
 		SubnetMap:   c.FormValue("subnetMap"),
 		Subnets:     c.FormValue("subnets"),
 		Motd:        s.Motd,
+		Version:     s.Version,
+		VersionURL:  versionURL,
 	}
 	return c.Render(http.StatusOK, "index.html", f)
 }

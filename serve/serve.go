@@ -172,6 +172,7 @@ func Run(cmdCtx command.Context) error {
 	s := &server{
 		HTTPOrigin: httpOrigin,
 		Motd:       motd,
+		Version:    cmdCtx.Version,
 	}
 
 	addRoutes(e, s)

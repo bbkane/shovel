@@ -9,6 +9,7 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Updated the README with instructions to run locally
 - Add Trace ID to submit results
+- Add version link to index.html
 
 ## Changed
 
