@@ -105,8 +105,16 @@ func (s *server) Submit(c echo.Context) error {
 	// This only works for GET
 	// filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
 
+	// NOTE: I'm not sure whether the correct HTTP origin can be read from the request. So let's try a few different ways to get it and control them with a flag so I can easily revert in "prod". if I can confirm that "request.Host" works, I can remove the flag and just use c.Request().Host by default. TODO: when I clean this up, also figure out how to get whether the proto is HTTP or HTTPS
+	var httpOrigin string
+	switch s.HTTPOrigin {
+	case "request.Host":
+		httpOrigin = "http://" + c.Request().Host
+	default:
+		httpOrigin = s.HTTPOrigin
+	}
 	// This works for POST and I think it works for GET too?
-	filledFormURL := s.HTTPOrigin + "/?" + c.Request().Form.Encode()
+	filledFormURL := httpOrigin + "/?" + c.Request().Form.Encode()
 
 	t := buildTable(buildTableParams{
 		Qnames:        qnames,

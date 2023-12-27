@@ -11,8 +11,10 @@
             "mode": "debug",
             "program": "main.go",
             "args": [
-                "serve"
-            ]
+                "serve",
+                "--otel-provider",
+                "stdout", // NOTE: this doesn't read envvars by default, need to provide "env" or "envfile" if I want to use OpenObserve
+            ],
         }
     ]
 }

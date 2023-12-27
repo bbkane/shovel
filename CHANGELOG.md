@@ -14,6 +14,7 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `open-observe` -> `openobserve` (mostly visible in flag names and values)
 - made stdout tracer print jsonl instead of formatting. Use format_jsonl to format
 - Moved README systemd notes to a link to [shovel_ansible](https://github.com/bbkane/shovel_ansible/)
+- Allow `--http-origin` to contain `"request.Host"` in an experiment to see if we can let it use that instead of providing the HTTP origin as a flag. What does the client see?
 
 ## Fixed
 
