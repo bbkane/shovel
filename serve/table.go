@@ -19,8 +19,9 @@ type Row struct {
 	Columns      []TdData
 	AnsErrCounts []AnsErrCount
 }
-type Table struct {
+type ResultTable struct {
 	FilledFormURL string
+	TraceID       string
 	Rows          []Row
 }
 
@@ -32,18 +33,20 @@ type buildTableParams struct {
 	ResMul        []dig.DigRepeatResult
 	SubnetToName  map[string]string
 	FilledFormURL string
+	TraceID       string
 }
 
-func buildTable(p buildTableParams) Table {
+func buildTable(p buildTableParams) ResultTable {
 	// Add params to output table
 	qLen := len(p.Qnames)
 	rLen := len(p.RtypeStrs)
 	sLen := len(p.Subnets)
 	nLen := len(p.Nameservers)
 	rows := qLen * rLen * sLen * nLen
-	t := Table{
+	t := ResultTable{
 		FilledFormURL: p.FilledFormURL,
 		Rows:          make([]Row, rows),
+		TraceID:       p.TraceID,
 	}
 
 	qWidth := rows / qLen

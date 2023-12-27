@@ -13,6 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/shovel/digcombine"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // splitFormValue splits by " " and removes "" from output slice
@@ -124,6 +125,7 @@ func (s *server) Submit(c echo.Context) error {
 		ResMul:        resMul,
 		SubnetToName:  subnetToName,
 		FilledFormURL: filledFormURL,
+		TraceID:       trace.SpanContextFromContext(c.Request().Context()).TraceID().String(),
 	})
 
 	return c.Render(http.StatusOK, "submit.html", t)
