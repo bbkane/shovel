@@ -18,6 +18,7 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## Fixed
 
 - write fixes here
+- A nil subnet doesn't show empty parens in the web form
 
 ## Removed
 
