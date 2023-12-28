@@ -11,8 +11,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/shovel/digcombine"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -38,11 +41,13 @@ type server struct {
 
 	// Version of our software
 	Version string
+
+	Tracer trace.Tracer
 }
 
 func (s *server) Submit(c echo.Context) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 30*time.Second)
 	defer cancel()
 
 	countForm := c.FormValue("count")
@@ -104,7 +109,8 @@ func (s *server) Submit(c echo.Context) error {
 		count,
 	)
 
-	resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
+	// resMul := dig.DigRepeatParallel(ctx, params, dig.DigOne)
+	resMul := dig.DigRepeatParallel(ctx, params, s.DigOne)
 
 	// This only works for GET
 	// filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
@@ -150,14 +156,6 @@ func (s *server) Index(c echo.Context) error {
 		VersionURL string
 	}
 
-	var versionURL string
-	switch s.Version {
-	case "(devel)":
-		versionURL = "https://github.com/bbkane/shovel"
-	default:
-		versionURL = "https://github.com/bbkane/shovel/tree/" + s.Version
-	}
-
 	f := indexData{
 		Count:       c.FormValue("count"),
 		Qnames:      c.FormValue("qnames"),
@@ -168,7 +166,31 @@ func (s *server) Index(c echo.Context) error {
 		Subnets:     c.FormValue("subnets"),
 		Motd:        s.Motd,
 		Version:     s.Version,
-		VersionURL:  versionURL,
+		// Might be better not to hardcode this, but I don't see it changing ever...
+		VersionURL: "https://github.com/bbkane/shovel",
 	}
 	return c.Render(http.StatusOK, "index.html", f)
+}
+
+func (s *server) DigOne(ctx context.Context, p dig.DigOneParams) ([]string, error) {
+	// https://opentelemetry.io/docs/concepts/signals/traces/#spans
+	ctx, span := s.Tracer.Start(
+		ctx,
+		"DigOne",
+		trace.WithAttributes(
+			attribute.String("NameserverIPPort", p.NameserverIPPort),
+			attribute.String("Proto", p.Proto),
+			attribute.String("Qname", p.Qname),
+			attribute.String("Rtype", dns.TypeToString[p.Rtype]),
+			attribute.String("SubnetIP", p.SubnetIP.String()),
+			attribute.Int64("Timeout", int64(p.Timeout)),
+		),
+		trace.WithSpanKind(trace.SpanKindInternal),
+	)
+	defer span.End()
+	results, err := dig.DigOne(ctx, p)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+	}
+	return results, err
 }

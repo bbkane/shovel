@@ -56,11 +56,6 @@ func initHTTPTracerProvider(httpArgs initHTTPTracerProviderParams, tracerArgs tr
 		),
 	)
 
-	// stdExporter, _ := stdouttrace.New(
-	// 	stdouttrace.WithWriter(io.Writer(os.Stdout)),
-	// 	stdouttrace.WithPrettyPrint(),
-	// )
-
 	if err != nil {
 		return nil, fmt.Errorf("Error creating HTTP OTLP exporter: %w", err)
 	}
