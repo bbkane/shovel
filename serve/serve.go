@@ -173,6 +173,9 @@ func Run(cmdCtx command.Context) error {
 		HTTPOrigin: httpOrigin,
 		Motd:       motd,
 		Version:    cmdCtx.Version,
+		Tracer: tp.Tracer(
+			"shovel serve", // TODO: get a better name
+		),
 	}
 
 	addRoutes(e, s)
