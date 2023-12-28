@@ -3,13 +3,14 @@
 All notable changes to this project will be documented in this file. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-# v0.0.11 (Unreleased)
+# v0.0.11
 
 ## Added
 
 - Updated the README with instructions to run locally
 - Add Trace ID to submit results
 - Add version link to index.html
+- instrument DigOne for OpenTelemetry
 
 ## Changed
 
