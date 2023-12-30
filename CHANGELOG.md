@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+# v0.0.12 (Unreleased)
+
+## Added
+
+- Add `--trace-id-template` flag so I can easily format my Trace IDs into links.
+
 # v0.0.11
 
 ## Added

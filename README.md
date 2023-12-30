@@ -72,11 +72,10 @@ Run OpenObserve (in another terminal) after downloading:
 
 Open OpenObserve at: http://localhost:5080/web/traces?period=15m&query=&org_identifier=default
 
-Run shovel. Check `go run . serve --help` to see all flags available
+Run shovel. Check `go run . serve --help` to see all flags available. Also see [format_jsonl.py]https://github.com/bbkane/dotfiles/blob/master/bin_common/bin_common/format_jsonl.py)
 
 ```bash
-go run . serve \
-  --otel-provider openobserve
+go run . serve | format_jsonl.py fmt
 ```
 
 Open shovel at: http://127.0.0.1:8080/?count=1&nameservers=dns3.p09.nsone.net%3A53&protocol=udp&qnames=linkedin.com+www.linkedin.com&rtypes=A&subnetMap=&subnets=

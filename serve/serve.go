@@ -99,6 +99,8 @@ func Run(cmdCtx command.Context) error {
 
 	otelProvider := cmdCtx.Flags["--otel-provider"].(string)
 
+	traceIDTemplate := cmdCtx.Flags["--trace-id-template"].(string)
+
 	var tp *sdktrace.TracerProvider
 	var tpErr error
 
@@ -138,17 +140,25 @@ func Run(cmdCtx command.Context) error {
 	// echo customization
 	e.HideBanner = true
 
-	// templates
-	temp, err := template.New("").
-		Funcs(template.FuncMap{}).
-		ParseFS(embeddedFiles, "static/templates/*.html")
-	if err != nil {
-		return fmt.Errorf("could not parse embedded template files: %w", err)
+	// Add templates
+	{
+		fsTemplates, err := template.New("").
+			Funcs(template.FuncMap{}).
+			ParseFS(embeddedFiles, "static/templates/*.html")
+		if err != nil {
+			return fmt.Errorf("could not parse embedded template files: %w", err)
+		}
+
+		traceIDFlagTemplate, err := fsTemplates.New("trace-id-template").Parse(traceIDTemplate)
+		if err != nil {
+			return fmt.Errorf("could not parse --trace-id-template string: %w", err)
+
+		}
+		t := &Template{
+			templates: traceIDFlagTemplate,
+		}
+		e.Renderer = t
 	}
-	t := &Template{
-		templates: temp,
-	}
-	e.Renderer = t
 
 	// TODO: add ability to log to file
 	// logger

@@ -190,7 +190,7 @@ func serveCmd(digFooter string) command.Command {
 		),
 		command.Flag(
 			"--http-origin",
-			"HTTP Origin clients will access",
+			"HTTP Origin clients will access. Use 'request.Host' to read the URL from the client. I will do this automatically and remove this flag after some more testing...",
 			scalar.String(
 				scalar.Default("http://127.0.0.1:8080"),
 			),
@@ -208,7 +208,7 @@ func serveCmd(digFooter string) command.Command {
 			"Enable tracing with OpenObserve",
 			scalar.String(
 				scalar.Choices("openobserve", "stdout"),
-				scalar.Default("stdout"),
+				scalar.Default("openobserve"),
 			),
 			flag.Required(),
 			flag.ConfigPath("serve.otel.provider"),
@@ -242,6 +242,15 @@ func serveCmd(digFooter string) command.Command {
 				scalar.Default("dev"),
 			),
 			flag.ConfigPath("serve.otel.service-env"),
+			flag.Required(),
+		),
+		command.Flag(
+			"--trace-id-template",
+			"Go HTML Template to customize TraceID formatting. Available fields: .TraceID",
+			scalar.String(
+				scalar.Default("<p>TraceID: <a href=\"http://localhost:5080/web/traces?period=15m&query=&org_identifier=default&trace_id={{.TraceID}}\" target=\"_blank\">{{.TraceID}}</a></p>"),
+			),
+			flag.ConfigPath("serve.trace-id-template"),
 			flag.Required(),
 		),
 	)

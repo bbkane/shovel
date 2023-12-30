@@ -19,10 +19,15 @@ type Row struct {
 	Columns      []TdData
 	AnsErrCounts []AnsErrCount
 }
+
+type TraceIDTemplateArgs struct {
+	TraceID string
+}
+
 type ResultTable struct {
-	FilledFormURL string
-	TraceID       string
-	Rows          []Row
+	FilledFormURL       string
+	Rows                []Row
+	TraceIDTemplateArgs TraceIDTemplateArgs
 }
 
 type buildTableParams struct {
@@ -44,9 +49,9 @@ func buildTable(p buildTableParams) ResultTable {
 	nLen := len(p.Nameservers)
 	rows := qLen * rLen * sLen * nLen
 	t := ResultTable{
-		FilledFormURL: p.FilledFormURL,
-		Rows:          make([]Row, rows),
-		TraceID:       p.TraceID,
+		FilledFormURL:       p.FilledFormURL,
+		Rows:                make([]Row, rows),
+		TraceIDTemplateArgs: TraceIDTemplateArgs{TraceID: p.TraceID},
 	}
 
 	qWidth := rows / qLen
