@@ -190,8 +190,10 @@ func serveCmd(digFooter string) command.Command {
 		),
 		command.Flag(
 			"--motd",
-			"Message of the day to print on /",
-			scalar.String(),
+			"Message of the day to print on / . Should be HTML",
+			scalar.String(
+				scalar.Default("<p style=\"text-align:center\">Send and summarize multiple DNS queries</p>"),
+			),
 			flag.ConfigPath("serve.motd"),
 		),
 		command.Flag(

@@ -16,7 +16,7 @@
   <h1>Shovel - <a href="{{$f.VersionURL}}" target="_blank">{{$f.Version}}</a></h1>
 
   {{if $f.Motd }}
-  <p id="motd">{{$f.Motd}}</p>
+  <div id="motd">{{$f.Motd}}</div>
   {{end}}
 
   <form hx-post="/submit" hx-target="#results" hx-swap="innerHTML" hx-indicator="#loading-spinner">

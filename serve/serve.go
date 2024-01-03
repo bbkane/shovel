@@ -179,7 +179,7 @@ func Run(cmdCtx command.Context) error {
 
 	// routes
 	s := &server{
-		Motd:    motd,
+		Motd:    template.HTML(motd),
 		Version: cmdCtx.Version,
 		Tracer: tp.Tracer(
 			"shovel serve", // TODO: get a better name

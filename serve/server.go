@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"net"
 	"net/http"
 	"strconv"
@@ -35,7 +36,7 @@ func splitFormValue(formValue string) []string {
 type server struct {
 
 	// Motd - message of the day
-	Motd string
+	Motd template.HTML
 
 	// Version of our software
 	Version string
@@ -144,7 +145,7 @@ func (s *server) Index(c echo.Context) error {
 		SubnetMap   string
 		Subnets     string
 
-		Motd       string
+		Motd       template.HTML
 		Version    string
 		VersionURL string
 	}
