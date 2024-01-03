@@ -189,15 +189,6 @@ func serveCmd(digFooter string) command.Command {
 			flag.ConfigPath("serve.addr-port"),
 		),
 		command.Flag(
-			"--http-origin",
-			"HTTP Origin clients will access. Use 'request.Host' to read the URL from the client. I will do this automatically and remove this flag after some more testing...",
-			scalar.String(
-				scalar.Default("http://127.0.0.1:8080"),
-			),
-			flag.Required(),
-			flag.ConfigPath("serve.http-origin"),
-		),
-		command.Flag(
 			"--motd",
 			"Message of the day to print on /",
 			scalar.String(),

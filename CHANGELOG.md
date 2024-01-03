@@ -9,6 +9,10 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Add `--trace-id-template` flag so I can easily format my Trace IDs into links.
 
+## Removed
+
+- Remove `--http-origin` flag, instead reading from the client's request
+
 # v0.0.11
 
 ## Added

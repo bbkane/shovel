@@ -94,7 +94,6 @@ func addRoutes(e *echo.Echo, s *server) {
 func Run(cmdCtx command.Context) error {
 
 	addrPort := cmdCtx.Flags["--addr-port"].(netip.AddrPort).String()
-	httpOrigin := cmdCtx.Flags["--http-origin"].(string)
 	motd, _ := cmdCtx.Flags["--motd"].(string)
 
 	otelProvider := cmdCtx.Flags["--otel-provider"].(string)
@@ -180,9 +179,8 @@ func Run(cmdCtx command.Context) error {
 
 	// routes
 	s := &server{
-		HTTPOrigin: httpOrigin,
-		Motd:       motd,
-		Version:    cmdCtx.Version,
+		Motd:    motd,
+		Version: cmdCtx.Version,
 		Tracer: tp.Tracer(
 			"shovel serve", // TODO: get a better name
 		),
