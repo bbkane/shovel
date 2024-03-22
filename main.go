@@ -201,8 +201,9 @@ func serveCmd(digFooter string) command.Command {
 			"Enable tracing with OpenObserve",
 			scalar.String(
 				scalar.Choices("openobserve", "stdout"),
-				scalar.Default("openobserve"),
+				scalar.Default("stdout"),
 			),
+			flag.EnvVars("SHOVEL_SERVE_OTEL_PROVIDER"),
 			flag.Required(),
 			flag.ConfigPath("serve.otel.provider"),
 		),

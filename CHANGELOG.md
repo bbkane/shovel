@@ -3,7 +3,15 @@
 All notable changes to this project will be documented in this file. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-# v0.0.12 (Unreleased)
+Note that the most recent version may be unreleased. See all releases on [GitHub](https://github.com/bbkane/shovel/releases).
+
+# v0.0.13
+
+## Changed
+
+-- `serve --otel-provider` now defaults to `stdout` and is can be overridden by the `SHOVEL_SERVE_OTEL_PROVIDER` environment variable.
+
+# v0.0.12
 
 ## Added
 
