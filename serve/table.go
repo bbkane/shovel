@@ -28,38 +28,32 @@ type ResultTable struct {
 	FilledFormURL       string
 	Rows                []Row
 	TraceIDTemplateArgs TraceIDTemplateArgs
+	TableJSON           string
 }
 
-type buildTableParams struct {
-	Qnames        []string
-	RtypeStrs     []string
-	Subnets       []net.IP
-	Nameservers   []string
-	ResMul        []dig.DigRepeatResult
-	SubnetToName  map[string]string
-	FilledFormURL string
-	TraceID       string
+type buildRowParams struct {
+	Qnames       []string
+	RtypeStrs    []string
+	Subnets      []net.IP
+	Nameservers  []string
+	ResMul       []dig.DigRepeatResult
+	SubnetToName map[string]string
 }
 
-func buildTable(p buildTableParams) ResultTable {
-	// Add params to output table
+func buildRows(p buildRowParams) []Row {
 	qLen := len(p.Qnames)
 	rLen := len(p.RtypeStrs)
 	sLen := len(p.Subnets)
 	nLen := len(p.Nameservers)
 	rows := qLen * rLen * sLen * nLen
-	t := ResultTable{
-		FilledFormURL:       p.FilledFormURL,
-		Rows:                make([]Row, rows),
-		TraceIDTemplateArgs: TraceIDTemplateArgs{TraceID: p.TraceID},
-	}
+	res := make([]Row, rows)
 
 	qWidth := rows / qLen
 	{
 		i := 0
 		for r := 0; r < rows; r += qWidth {
 			td := TdData{Content: p.Qnames[i%qLen], Rowspan: qWidth}
-			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			res[r].Columns = append(res[r].Columns, td)
 			i++
 		}
 	}
@@ -69,7 +63,7 @@ func buildTable(p buildTableParams) ResultTable {
 		i := 0
 		for r := 0; r < rows; r += rWidth {
 			td := TdData{Content: p.RtypeStrs[i%rLen], Rowspan: rWidth}
-			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			res[r].Columns = append(res[r].Columns, td)
 			i++
 		}
 	}
@@ -84,7 +78,7 @@ func buildTable(p buildTableParams) ResultTable {
 				content = content + " (" + p.SubnetToName[content] + ")"
 			}
 			td := TdData{Content: content, Rowspan: sWidth}
-			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			res[r].Columns = append(res[r].Columns, td)
 			i++
 		}
 	}
@@ -94,7 +88,7 @@ func buildTable(p buildTableParams) ResultTable {
 		i := 0
 		for r := 0; r < rows; r += nWidth {
 			td := TdData{Content: p.Nameservers[i%nLen], Rowspan: nWidth}
-			t.Rows[r].Columns = append(t.Rows[r].Columns, td)
+			res[r].Columns = append(res[r].Columns, td)
 			i++
 		}
 	}
@@ -114,9 +108,10 @@ func buildTable(p buildTableParams) ResultTable {
 				AnsErrCount{AnsErrs: []string{e.String}, Count: e.Count},
 			)
 		}
-		t.Rows[i].AnsErrCounts = aecs
+		res[i].AnsErrCounts = aecs
 
 	}
 
-	return t
+	return res
+
 }

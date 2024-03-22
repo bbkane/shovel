@@ -36,5 +36,19 @@
         {{end}}
     </tbody>
 </table>
+
+<div hidden>Hallo!!</div>
+
+<div id="myText" hidden>{{$td.TableJSON}}</div>
+<button onclick="myFunction()">Copy clipboard as JSON</button>
+<script>
+    // https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_copy_clipboard2
+    function myFunction() {
+        // https://stackoverflow.com/a/77974817/2958070
+        const text = document.getElementById("myText");
+        navigator.clipboard.writeText(text.innerText);
+    }
+</script>
+
 <p>Filled Form URL: <a href="{{$td.FilledFormURL}}">{{$td.FilledFormURL}}</a></p>
 {{template "trace-id-template" $td.TraceIDTemplateArgs}}

@@ -120,16 +120,23 @@ func (s *server) Submit(c echo.Context) error {
 	// This works for POST and I think it works for GET too?
 	filledFormURL := httpOrigin + "/?" + c.Request().Form.Encode()
 
-	t := buildTable(buildTableParams{
-		Qnames:        qnames,
-		RtypeStrs:     rtypeStrs,
-		Subnets:       parsedSubnets,
-		Nameservers:   nameservers,
-		ResMul:        resMul,
-		SubnetToName:  subnetToName,
+	traceID := trace.SpanContextFromContext(
+		c.Request().Context(),
+	).TraceID().String()
+
+	t := ResultTable{
 		FilledFormURL: filledFormURL,
-		TraceID:       trace.SpanContextFromContext(c.Request().Context()).TraceID().String(),
-	})
+		Rows: buildRows(buildRowParams{
+			Qnames:       qnames,
+			RtypeStrs:    rtypeStrs,
+			Subnets:      parsedSubnets,
+			Nameservers:  nameservers,
+			ResMul:       resMul,
+			SubnetToName: subnetToName,
+		}),
+		TraceIDTemplateArgs: TraceIDTemplateArgs{TraceID: traceID},
+		TableJSON:           "BOB", // TODO: get some JSON results here!
+	}
 
 	return c.Render(http.StatusOK, "submit.html", t)
 }
