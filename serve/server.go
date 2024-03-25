@@ -124,6 +124,12 @@ func (s *server) Submit(c echo.Context) error {
 		c.Request().Context(),
 	).TraceID().String()
 
+	tableYAMLStr, err := buildTableYAML(resMul)
+	if err != nil {
+		// TODO: non-fatal error, send to traces and continue...
+		panic(err)
+	}
+
 	t := ResultTable{
 		FilledFormURL: filledFormURL,
 		Rows: buildRows(buildRowParams{
@@ -135,7 +141,7 @@ func (s *server) Submit(c echo.Context) error {
 			SubnetToName: subnetToName,
 		}),
 		TraceIDTemplateArgs: TraceIDTemplateArgs{TraceID: traceID},
-		TableJSON:           "BOB", // TODO: get some JSON results here!
+		TableYAML:           tableYAMLStr,
 	}
 
 	return c.Render(http.StatusOK, "submit.html", t)

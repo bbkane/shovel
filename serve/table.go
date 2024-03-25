@@ -28,7 +28,7 @@ type ResultTable struct {
 	FilledFormURL       string
 	Rows                []Row
 	TraceIDTemplateArgs TraceIDTemplateArgs
-	TableJSON           string
+	TableYAML           string
 }
 
 type buildRowParams struct {
