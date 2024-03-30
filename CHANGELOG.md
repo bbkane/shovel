@@ -5,6 +5,16 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Note that the most recent version may be unreleased. See all releases on [GitHub](https://github.com/bbkane/shovel/releases).
 
+# v0.0.14
+
+## Added
+
+- Add metadata to "Copy as YAML to clipboard" YAMl
+
+## Fixed
+
+- "Copy as YAML to clipboard" results now use strings as rtypes
+
 # v0.0.13
 
 ## Added
@@ -48,7 +58,6 @@ Note that the most recent version may be unreleased. See all releases on [GitHub
 
 ## Fixed
 
-- write fixes here
 - A nil subnet doesn't show empty parens in the web form
 
 ## Removed

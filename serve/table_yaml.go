@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
 	"gopkg.in/yaml.v3"
 )
 
+type buildTableYAMLMetadata struct {
+	Time          string `yaml:"time"`
+	ShovelVersion string `yaml:"shovel_version"`
+	TraceID       string `yaml:"trace_id"`
+	FilledFormURL string `yaml:"filled_form_url"`
+}
+
 // buildTableJSON returns a YAML string suitable so we can copy it from the button. Copied from digList for now... will probably want to improve the format later.
-func buildTableYAML(dParams []dig.DigRepeatParams, dRes []dig.DigRepeatResult) (string, error) {
+func buildTableYAML(metadata buildTableYAMLMetadata, dParams []dig.DigRepeatParams, dRes []dig.DigRepeatResult) (string, error) {
 	type Rdata struct {
 		Content []string `yaml:"content"`
 		Count   int      `yaml:"count"`
@@ -26,7 +34,7 @@ func buildTableYAML(dParams []dig.DigRepeatParams, dRes []dig.DigRepeatResult) (
 		NameserverIPPort string
 		Proto            string
 		Qname            string
-		Rtype            int
+		Rtype            string
 		SubnetIP         string
 		// From Results
 		Rdata  []Rdata `yaml:"rdata"`
@@ -34,11 +42,13 @@ func buildTableYAML(dParams []dig.DigRepeatParams, dRes []dig.DigRepeatResult) (
 	}
 
 	type Return struct {
-		Results []Result `yaml:"results"`
+		Metadata buildTableYAMLMetadata
+		Results  []Result `yaml:"results"`
 	}
 
 	ret := Return{
-		Results: make([]Result, len(dRes)),
+		Metadata: metadata,
+		Results:  make([]Result, len(dRes)),
 	}
 	for i := range dRes {
 		ret.Results[i].Rdata = make([]Rdata, len(dRes[i].Answers))
@@ -47,7 +57,7 @@ func buildTableYAML(dParams []dig.DigRepeatParams, dRes []dig.DigRepeatResult) (
 		ret.Results[i].NameserverIPPort = dParams[i].DigOneParams.NameserverIPPort
 		ret.Results[i].Proto = dParams[i].DigOneParams.Proto
 		ret.Results[i].Qname = dParams[i].DigOneParams.Qname
-		ret.Results[i].Rtype = int(dParams[i].DigOneParams.Rtype)
+		ret.Results[i].Rtype = dns.TypeToString[dParams[i].DigOneParams.Rtype]
 		ret.Results[i].SubnetIP = dParams[i].DigOneParams.SubnetIP.String()
 
 		for r := range dRes[i].Answers {
