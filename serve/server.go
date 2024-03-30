@@ -124,7 +124,7 @@ func (s *server) Submit(c echo.Context) error {
 		c.Request().Context(),
 	).TraceID().String()
 
-	tableYAMLStr, err := buildTableYAML(resMul)
+	tableYAMLStr, err := buildTableYAML(params, resMul)
 	if err != nil {
 		// TODO: non-fatal error, send to traces and continue...
 		panic(err)

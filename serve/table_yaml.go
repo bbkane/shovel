@@ -9,7 +9,7 @@ import (
 )
 
 // buildTableJSON returns a YAML string suitable so we can copy it from the button. Copied from digList for now... will probably want to improve the format later.
-func buildTableYAML(dRes []dig.DigRepeatResult) (string, error) {
+func buildTableYAML(dParams []dig.DigRepeatParams, dRes []dig.DigRepeatResult) (string, error) {
 	type Rdata struct {
 		Content []string `yaml:"content"`
 		Count   int      `yaml:"count"`
@@ -21,6 +21,14 @@ func buildTableYAML(dRes []dig.DigRepeatResult) (string, error) {
 	}
 
 	type Result struct {
+		// From params
+		Count            int
+		NameserverIPPort string
+		Proto            string
+		Qname            string
+		Rtype            int
+		SubnetIP         string
+		// From Results
 		Rdata  []Rdata `yaml:"rdata"`
 		Errors []Error `yaml:"errors"`
 	}
@@ -34,6 +42,14 @@ func buildTableYAML(dRes []dig.DigRepeatResult) (string, error) {
 	}
 	for i := range dRes {
 		ret.Results[i].Rdata = make([]Rdata, len(dRes[i].Answers))
+
+		ret.Results[i].Count = dParams[i].Count
+		ret.Results[i].NameserverIPPort = dParams[i].DigOneParams.NameserverIPPort
+		ret.Results[i].Proto = dParams[i].DigOneParams.Proto
+		ret.Results[i].Qname = dParams[i].DigOneParams.Qname
+		ret.Results[i].Rtype = int(dParams[i].DigOneParams.Rtype)
+		ret.Results[i].SubnetIP = dParams[i].DigOneParams.SubnetIP.String()
+
 		for r := range dRes[i].Answers {
 			ret.Results[i].Rdata[r].Content = dRes[i].Answers[r].StringSlice
 			ret.Results[i].Rdata[r].Count = dRes[i].Answers[r].Count

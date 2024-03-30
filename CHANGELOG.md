@@ -9,7 +9,9 @@ Note that the most recent version may be unreleased. See all releases on [GitHub
 
 ## Changed
 
--- `serve --otel-provider` now defaults to `stdout` and is can be overridden by the `SHOVEL_SERVE_OTEL_PROVIDER` environment variable.
+- `serve --otel-provider` now defaults to `stdout` and is can be overridden by the `SHOVEL_SERVE_OTEL_PROVIDER` environment variable.
+- Add "Copy table as YAML to clipboard" (#46)
+
 
 # v0.0.12
 
