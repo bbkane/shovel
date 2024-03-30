@@ -95,6 +95,7 @@ func Run(cmdCtx command.Context) error {
 
 	addrPort := cmdCtx.Flags["--addr-port"].(netip.AddrPort).String()
 	motd, _ := cmdCtx.Flags["--motd"].(string)
+	footer, _ := cmdCtx.Flags["--footer"].(string)
 
 	otelProvider := cmdCtx.Flags["--otel-provider"].(string)
 
@@ -184,6 +185,7 @@ func Run(cmdCtx command.Context) error {
 		Tracer: tp.Tracer(
 			"shovel serve", // TODO: get a better name
 		),
+		Footer: template.HTML(footer),
 	}
 
 	addRoutes(e, s)

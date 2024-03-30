@@ -36,7 +36,8 @@ func splitFormValue(formValue string) []string {
 type server struct {
 
 	// Motd - message of the day
-	Motd template.HTML
+	Motd   template.HTML
+	Footer template.HTML
 
 	// Version of our software
 	Version string
@@ -158,6 +159,7 @@ func (s *server) Index(c echo.Context) error {
 		SubnetMap   string
 		Subnets     string
 
+		Footer     template.HTML
 		Motd       template.HTML
 		Version    string
 		VersionURL string
@@ -171,6 +173,7 @@ func (s *server) Index(c echo.Context) error {
 		Rtypes:      c.FormValue("rtypes"),
 		SubnetMap:   c.FormValue("subnetMap"),
 		Subnets:     c.FormValue("subnets"),
+		Footer:      s.Footer,
 		Motd:        s.Motd,
 		Version:     s.Version,
 		// Might be better not to hardcode this, but I don't see it changing ever...

@@ -189,6 +189,14 @@ func serveCmd(digFooter string) command.Command {
 			flag.ConfigPath("serve.addr-port"),
 		),
 		command.Flag(
+			"--footer",
+			"Trailing HTML for the bottom of the page",
+			scalar.String(
+				scalar.Default(""),
+			),
+			flag.ConfigPath("serve.footer"),
+		),
+		command.Flag(
 			"--motd",
 			"Message of the day to print on / . Should be HTML",
 			scalar.String(

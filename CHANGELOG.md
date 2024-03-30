@@ -7,11 +7,14 @@ Note that the most recent version may be unreleased. See all releases on [GitHub
 
 # v0.0.13
 
+## Added
+
+- Add "Copy table as YAML to clipboard" (#46)
+- Add `serve --footer` flag to put HTML at the bottom. This will let me print geoip websites/other dns sites
+
 ## Changed
 
 - `serve --otel-provider` now defaults to `stdout` and is can be overridden by the `SHOVEL_SERVE_OTEL_PROVIDER` environment variable.
-- Add "Copy table as YAML to clipboard" (#46)
-
 
 # v0.0.12
 
