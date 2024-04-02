@@ -5,6 +5,12 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Note that the most recent version may be unreleased. See all releases on [GitHub](https://github.com/bbkane/shovel/releases).
 
+# v0.0.15
+
+## Added
+
+- Add HTTPS support to serve, allowing "Copy as YAML to clipboard" to work (see https://stackoverflow.com/questions/51805395/navigator-clipboard-is-undefined)
+
 # v0.0.14
 
 ## Added

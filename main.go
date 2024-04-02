@@ -197,6 +197,18 @@ func serveCmd(digFooter string) command.Command {
 			flag.ConfigPath("serve.footer"),
 		),
 		command.Flag(
+			"--https-certfile",
+			"Path to HTTP public key in PEM format. NOTE: in most cases, this is the leaf cert concatenated with the ICA in one file, and the order matters",
+			scalar.Path(),
+			flag.ConfigPath("serve.https.certfile"),
+		),
+		command.Flag(
+			"--https-keyfile",
+			"Path to HTTP private key in PEM format",
+			scalar.Path(),
+			flag.ConfigPath("serve.https.keyfile"),
+		),
+		command.Flag(
 			"--motd",
 			"Message of the day to print on / . Should be HTML",
 			scalar.String(
@@ -244,6 +256,17 @@ func serveCmd(digFooter string) command.Command {
 				scalar.Default("dev"),
 			),
 			flag.ConfigPath("serve.otel.service-env"),
+			flag.Required(),
+		),
+		command.Flag(
+			"--protocol",
+			"Serve via HTTP or HTTPS",
+			scalar.String(
+				scalar.Choices("HTTP", "HTTPS"),
+				scalar.Default("HTTP"),
+			),
+			flag.ConfigPath("serve.protocol"),
+			flag.EnvVars("SHOVEL_SERVE_PROTOCOL"),
 			flag.Required(),
 		),
 		command.Flag(

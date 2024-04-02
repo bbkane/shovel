@@ -98,6 +98,24 @@ func Run(cmdCtx command.Context) error {
 	footer, _ := cmdCtx.Flags["--footer"].(string)
 
 	otelProvider := cmdCtx.Flags["--otel-provider"].(string)
+	protocol := cmdCtx.Flags["--protocol"].(string)
+
+	var certFile string
+	var keyFile string
+	switch protocol {
+	case "HTTP":
+		// do nothing, we're fine
+	case "HTTPS":
+		for _, name := range []string{"--https-certfile", "--https-keyfile"} {
+			if _, exists := cmdCtx.Flags[name]; !exists {
+				return errors.New("--protocol HTTPS requires this flag to be set: " + name)
+			}
+		}
+		certFile = cmdCtx.Flags["--https-certfile"].(string)
+		keyFile = cmdCtx.Flags["--https-keyfile"].(string)
+	default:
+		panic("Unknown serve protocol: " + protocol)
+	}
 
 	traceIDTemplate := cmdCtx.Flags["--trace-id-template"].(string)
 
@@ -192,7 +210,20 @@ func Run(cmdCtx command.Context) error {
 
 	// Start server and shutdown gracefully. https://echo.labstack.com/cookbook/graceful-shutdown/
 	go func() {
-		if err := e.Start(addrPort); err != nil && err != http.ErrServerClosed {
+
+		var startFunc func() error
+		switch protocol {
+		case "HTTP":
+			startFunc = func() error { return e.Start(addrPort) }
+		case "HTTPS":
+			startFunc = func() error {
+				return e.StartTLS(addrPort, certFile, keyFile)
+			}
+		default:
+			panic("Unknown serve protocol")
+		}
+
+		if err := startFunc(); err != nil && err != http.ErrServerClosed {
 			e.Logger.Fatalj(log.JSON{
 				"message": "start error, shutting down",
 				"err":     err.Error(),
