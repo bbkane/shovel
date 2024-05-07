@@ -115,8 +115,13 @@ func (s *server) Submit(c echo.Context) error {
 	// This only works for GET
 	// filledFormURL := s.HTTPOrigin + "/?" + c.Request().URL.RawQuery
 
+	protocol := "http://"
+	if c.Request().TLS != nil {
+		protocol = "https://"
+	}
+
 	// TODO: don't hardcode the http protocol...
-	httpOrigin := "http://" + c.Request().Host
+	httpOrigin := protocol + c.Request().Host
 
 	// This works for POST and I think it works for GET too?
 	filledFormURL := httpOrigin + "/?" + c.Request().Form.Encode()
