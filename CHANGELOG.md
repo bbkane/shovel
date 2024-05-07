@@ -5,6 +5,16 @@ is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Note that the most recent version may be unreleased. See all releases on [GitHub](https://github.com/bbkane/shovel/releases).
 
+# v0.0.18
+
+## Fixed
+
+- Determine filled form URL protocol from request instead of hardcoding to HTTP
+
+# v0.0.17
+
+Just a non-user-visible bug fix with the release process
+
 # v0.0.16
 
 ## Added
