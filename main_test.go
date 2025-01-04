@@ -70,8 +70,11 @@ func TestRunCLI(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			warg.GoldenTest(
 				t,
-				tt.app,
-				updateGolden,
+				warg.GoldenTestArgs{
+					App:             &tt.app,
+					UpdateGolden:    updateGolden,
+					ExpectActionErr: false,
+				},
 				warg.OverrideArgs(tt.args),
 				warg.AddContext(ctx),
 			)
