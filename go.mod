@@ -1,12 +1,12 @@
 module go.bbkane.com/shovel
 
-go 1.21
+go 1.23
 
-toolchain go1.21.4
+toolchain go1.23.4
 
 require (
 	go.bbkane.com/gocolor v0.0.5 // indirect
-	go.bbkane.com/warg v0.0.22
+	go.bbkane.com/warg v0.0.26
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/labstack/gommon v0.4.0
 	github.com/miekg/dns v1.1.56
 	github.com/sourcegraph/conc v0.3.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.44.0
 	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.18.0
@@ -60,7 +60,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
