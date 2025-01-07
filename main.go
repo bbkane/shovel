@@ -11,6 +11,7 @@ import (
 	"go.bbkane.com/warg/command"
 	"go.bbkane.com/warg/config/yamlreader"
 	"go.bbkane.com/warg/flag"
+	"go.bbkane.com/warg/path"
 	"go.bbkane.com/warg/section"
 	"go.bbkane.com/warg/value/dict"
 	"go.bbkane.com/warg/value/scalar"
@@ -294,7 +295,6 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 				"serve",
 				serveCmd(digFooter),
 			),
-			section.ExistingFlag("--color", warg.ColorFlag()),
 			section.ExistingCommand("version", warg.VersionCommand()),
 			section.Footer(digFooter),
 			section.Section(
@@ -313,12 +313,13 @@ Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 		warg.OverrideVersion(version),
 		warg.ConfigFlag(
 			"--config",
-			[]scalar.ScalarOpt[string]{
-				scalar.Default("~/.config/shovel.yaml"),
+			[]scalar.ScalarOpt[path.Path]{
+				scalar.Default(path.New("~/.config/shovel.yaml")),
 			},
 			yamlreader.New,
 			"Config",
 		),
+		warg.ExistingGlobalFlag("--color", warg.ColorFlag()),
 	)
 	return app
 }

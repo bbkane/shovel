@@ -19,6 +19,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"go.bbkane.com/shovel/serve/custommiddleware"
 	"go.bbkane.com/warg/command"
+	"go.bbkane.com/warg/path"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -111,8 +112,8 @@ func Run(cmdCtx command.Context) error {
 				return errors.New("--protocol HTTPS requires this flag to be set: " + name)
 			}
 		}
-		certFile = cmdCtx.Flags["--https-certfile"].(string)
-		keyFile = cmdCtx.Flags["--https-keyfile"].(string)
+		certFile = cmdCtx.Flags["--https-certfile"].(path.Path).MustExpand()
+		keyFile = cmdCtx.Flags["--https-keyfile"].(path.Path).MustExpand()
 	default:
 		panic("Unknown serve protocol: " + protocol)
 	}
