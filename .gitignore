@@ -1,3 +1,6 @@
-/dist/
+.DS_Store
+__debug_bin*
+dist/
 shovel
 shovel.exe
+tmp*
