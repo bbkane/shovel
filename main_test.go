@@ -7,6 +7,8 @@ import (
 
 	"go.bbkane.com/shovel/dig"
 	"go.bbkane.com/warg"
+	"go.bbkane.com/warg/parseopt"
+	"go.bbkane.com/warg/wargcore"
 )
 
 func TestBuildApp(t *testing.T) {
@@ -24,7 +26,7 @@ func TestRunCLI(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		app        warg.App
+		app        *wargcore.App
 		args       []string
 		digOneFunc dig.DigOneFunc
 	}{
@@ -71,12 +73,12 @@ func TestRunCLI(t *testing.T) {
 			warg.GoldenTest(
 				t,
 				warg.GoldenTestArgs{
-					App:             &tt.app,
+					App:             tt.app,
 					UpdateGolden:    updateGolden,
 					ExpectActionErr: false,
 				},
-				warg.OverrideArgs(tt.args),
-				warg.AddContext(ctx),
+				parseopt.Args(tt.args),
+				parseopt.Context(ctx),
 			)
 		})
 	}

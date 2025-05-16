@@ -9,7 +9,7 @@ import (
 
 	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
-	"go.bbkane.com/warg/command"
+	"go.bbkane.com/warg/wargcore"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,7 +32,7 @@ type Return struct {
 	Results []Result `yaml:"results"`
 }
 
-func Run(cmdCtx command.Context) error {
+func Run(cmdCtx wargcore.Context) error {
 
 	counts := cmdCtx.Flags["--count"].([]int)
 	qnames := cmdCtx.Flags["--qname"].([]string)

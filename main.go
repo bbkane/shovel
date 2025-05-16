@@ -16,16 +16,17 @@ import (
 	"go.bbkane.com/warg/value/dict"
 	"go.bbkane.com/warg/value/scalar"
 	"go.bbkane.com/warg/value/slice"
+	"go.bbkane.com/warg/wargcore"
 )
 
 var version string
 
-func digCombineCmd(digFooter string) command.Command {
+func digCombineCmd(digFooter string) wargcore.Command {
 	return command.New(
 		"Dig combinations of QNames/RTypes/Subnets/NSs and summarize results",
 		digcombine.Run,
 		command.Footer(digFooter),
-		command.Flag(
+		command.NewFlag(
 			"--count",
 			"Number of times to dig",
 			scalar.Int(
@@ -35,7 +36,7 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.Alias("-c"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--qname",
 			"Qualified names to dig",
 			slice.String(),
@@ -43,7 +44,7 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.Alias("-q"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--rtype",
 			"Record types",
 			slice.String(
@@ -54,7 +55,7 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.Alias("-r"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--nameserver",
 			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53 . Set to 'all' to use everything in --nameserver-map",
 			slice.String(),
@@ -63,13 +64,13 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Alias("-n"),
 			flag.UnsetSentinel("UNSET"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--nameserver-map",
 			"Map of name to nameserver IP:port. Can then use names as arguments to --nameserver",
 			dict.String(),
 			flag.ConfigPath("dig.combine.nameserver-map"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--subnet",
 			"Optional client subnet. Example: 101.251.8.0 for China. Set to 'all' to use everything in --subnet-map",
 			slice.String(),
@@ -77,13 +78,13 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Alias("-s"),
 			flag.UnsetSentinel("UNSET"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--subnet-map",
 			"Map of name to subnet. Can then use names as arguments to --subnet",
 			dict.Addr(),
 			flag.ConfigPath("dig.combine.subnet-map"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--global-timeout",
 			"Timeout for combined DNS requests",
 			scalar.Duration(
@@ -92,7 +93,7 @@ func digCombineCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.ConfigPath("dig.combine.global-timeout"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--protocol",
 			"Protocol to use when digging",
 			scalar.String(
@@ -106,12 +107,12 @@ func digCombineCmd(digFooter string) command.Command {
 	)
 }
 
-func digListCmd(digFooter string) command.Command {
+func digListCmd(digFooter string) wargcore.Command {
 	return command.New(
 		"Pruduces digs from a list of inputs and prints the summarized results as YAML",
 		diglist.Run,
 		command.Footer(digFooter),
-		command.Flag(
+		command.NewFlag(
 			"--count",
 			"Number of times to dig",
 			slice.Int(),
@@ -119,7 +120,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.Alias("-c"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--qname",
 			"qualified names to dig",
 			slice.String(),
@@ -127,7 +128,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.Alias("-q"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--nameserver",
 			"Nameserver IP + port to query. Example: 198.51.45.9:53 or dns.google:53",
 			slice.String(),
@@ -136,7 +137,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Alias("-n"),
 			flag.UnsetSentinel("UNSET"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--protocol",
 			"Protocol to use when digging",
 			slice.String(
@@ -146,7 +147,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Alias("-p"),
 			flag.ConfigPath("dig.list[].protocol"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--rtype",
 			"Record types",
 			slice.String(
@@ -156,7 +157,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.Alias("-r"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--subnet",
 			"Client subnet. Example: 101.251.8.0 for China. Set to 'none' not use a client subnet",
 			slice.String(),
@@ -165,7 +166,7 @@ func digListCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.UnsetSentinel("UNSET"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--timeout",
 			"Timeout for each individual DNS request",
 			slice.Duration(),
@@ -175,12 +176,12 @@ func digListCmd(digFooter string) command.Command {
 	)
 }
 
-func serveCmd(digFooter string) command.Command {
+func serveCmd(digFooter string) wargcore.Command {
 	return command.New(
 		"Run dig commands remotely",
 		serve.Run,
 		command.Footer(digFooter),
-		command.Flag(
+		command.NewFlag(
 			"--addr-port",
 			"Address + Port to serve from",
 			scalar.AddrPort(
@@ -189,7 +190,7 @@ func serveCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.ConfigPath("serve.addr-port"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--footer",
 			"Trailing HTML for the bottom of the page",
 			scalar.String(
@@ -197,19 +198,19 @@ func serveCmd(digFooter string) command.Command {
 			),
 			flag.ConfigPath("serve.footer"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--https-certfile",
 			"Path to HTTP public key in PEM format. NOTE: in most cases, this is the leaf cert concatenated with the ICA in one file, and the order matters",
 			scalar.Path(),
 			flag.ConfigPath("serve.https.certfile"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--https-keyfile",
 			"Path to HTTP private key in PEM format",
 			scalar.Path(),
 			flag.ConfigPath("serve.https.keyfile"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--motd",
 			"Message of the day to print on / . Should be HTML",
 			scalar.String(
@@ -217,7 +218,7 @@ func serveCmd(digFooter string) command.Command {
 			),
 			flag.ConfigPath("serve.motd"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--otel-provider",
 			"Enable tracing with OpenObserve",
 			scalar.String(
@@ -228,7 +229,7 @@ func serveCmd(digFooter string) command.Command {
 			flag.Required(),
 			flag.ConfigPath("serve.otel.provider"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--openobserve-endpoint",
 			"Endpoint to send traces to",
 			scalar.AddrPort(
@@ -236,21 +237,21 @@ func serveCmd(digFooter string) command.Command {
 			),
 			flag.ConfigPath("serve.openobserve.endpoint"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--openobserve-user",
 			"OpenObserve Username",
 			scalar.String(),
 			flag.ConfigPath("serve.openobserve.user"),
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_USER"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--openobserve-pass",
 			"OpenObserve Password",
 			scalar.String(),
 			flag.ConfigPath("serve.openobserve.pass"),
 			flag.EnvVars("SHOVEL_SERVE_OPENOBSERVE_PASS"),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--otel-service-env",
 			"OpenObserve Service Environment",
 			scalar.String(
@@ -259,7 +260,7 @@ func serveCmd(digFooter string) command.Command {
 			flag.ConfigPath("serve.otel.service-env"),
 			flag.Required(),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--protocol",
 			"Serve via HTTP or HTTPS",
 			scalar.String(
@@ -270,7 +271,7 @@ func serveCmd(digFooter string) command.Command {
 			flag.EnvVars("SHOVEL_SERVE_PROTOCOL"),
 			flag.Required(),
 		),
-		command.Flag(
+		command.NewFlag(
 			"--trace-id-template",
 			"Go HTML Template to customize TraceID formatting. Available fields: .TraceID",
 			scalar.String(
@@ -282,46 +283,49 @@ func serveCmd(digFooter string) command.Command {
 	)
 }
 
-func buildApp() warg.App {
+func buildApp() *wargcore.App {
 	digFooter := `Homepage: https://github.com/bbkane/shovel
 Examples: https://github.com/bbkane/shovel/blob/master/examples.md
 `
 
 	app := warg.New(
 		"shovel",
+		version,
 		section.New(
 			"Query DNS and count results",
-			section.ExistingCommand(
+			section.Command(
 				"serve",
 				serveCmd(digFooter),
 			),
-			section.ExistingCommand("version", warg.VersionCommand()),
+			section.CommandMap(warg.VersionCommandMap()),
 			section.Footer(digFooter),
-			section.Section(
+			section.NewSection(
 				"dig",
 				"Dig in different ways",
-				section.ExistingCommand(
+				section.Command(
 					"combine",
 					digCombineCmd(digFooter),
 				),
-				section.ExistingCommand(
+				section.Command(
 					"list",
 					digListCmd(digFooter),
 				),
 			),
 		),
-		warg.OverrideVersion(version),
 		warg.ConfigFlag(
-			"--config",
-			[]scalar.ScalarOpt[path.Path]{
-				scalar.Default(path.New("~/.config/shovel.yaml")),
-			},
 			yamlreader.New,
-			"Config",
+			wargcore.FlagMap{
+				"--config": flag.New(
+					"Path to YAML config file",
+					scalar.Path(
+						scalar.Default(path.New("~/.config/grabbit.yaml")),
+					),
+				),
+			},
 		),
-		warg.ExistingGlobalFlag("--color", warg.ColorFlag()),
+		warg.GlobalFlagMap(warg.ColorFlagMap()),
 	)
-	return app
+	return &app
 }
 
 func main() {

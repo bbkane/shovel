@@ -14,7 +14,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/miekg/dns"
 	"go.bbkane.com/shovel/dig"
-	"go.bbkane.com/warg/command"
+	"go.bbkane.com/warg/wargcore"
 )
 
 func validateNameserverStr(nameserverStr string) error {
@@ -155,7 +155,7 @@ func ParseNameservers(passedNameservers []string, nameserverMap map[string]strin
 	return nameservers, nameserverNames, nil
 }
 
-func parseCmdCtx(cmdCtx command.Context) (*parsedCmdCtx, error) {
+func parseCmdCtx(cmdCtx wargcore.Context) (*parsedCmdCtx, error) {
 
 	// simple params
 	count := cmdCtx.Flags["--count"].(int)
@@ -266,7 +266,7 @@ func printDigRepeat(t table.Writer, parsed parsedCmdCtx, p dig.DigRepeatParams, 
 
 }
 
-func Run(cmdCtx command.Context) error {
+func Run(cmdCtx wargcore.Context) error {
 
 	parsed, err := parseCmdCtx(cmdCtx)
 	if err != nil {

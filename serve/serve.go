@@ -18,8 +18,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"go.bbkane.com/shovel/serve/custommiddleware"
-	"go.bbkane.com/warg/command"
 	"go.bbkane.com/warg/path"
+	"go.bbkane.com/warg/wargcore"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -92,7 +92,7 @@ func addRoutes(e *echo.Echo, s *server) {
 	)
 }
 
-func Run(cmdCtx command.Context) error {
+func Run(cmdCtx wargcore.Context) error {
 
 	addrPort := cmdCtx.Flags["--addr-port"].(netip.AddrPort).String()
 	motd, _ := cmdCtx.Flags["--motd"].(string)
@@ -123,11 +123,12 @@ func Run(cmdCtx command.Context) error {
 	var tp *sdktrace.TracerProvider
 	var tpErr error
 
-	serviceName := []string{cmdCtx.AppName}
-	serviceName = append(serviceName, cmdCtx.Path...)
+	serviceName := []string{cmdCtx.App.Name}
+	serviceName = append(serviceName, cmdCtx.ParseState.SectionPath...)
+	serviceName = append(serviceName, cmdCtx.ParseState.CurrentCommandName)
 	tracerArgs := tracerResourceArgs{
 		ServiceName:        strings.Join(serviceName, " "),
-		ServiceVersion:     cmdCtx.Version,
+		ServiceVersion:     cmdCtx.App.Version,
 		ServiceEnvironment: cmdCtx.Flags["--otel-service-env"].(string),
 	}
 
@@ -200,7 +201,7 @@ func Run(cmdCtx command.Context) error {
 	// routes
 	s := &server{
 		Motd:    template.HTML(motd),
-		Version: cmdCtx.Version,
+		Version: cmdCtx.App.Version,
 		Tracer: tp.Tracer(
 			"shovel serve", // TODO: get a better name
 		),
