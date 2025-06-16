@@ -6,7 +6,7 @@ Pass multiple qnames, nameservers, record types, and client subnets, either via 
 
 ## Project Status (2025-06-14)
 
-`shoel1` works well, but I don't use it anymore. I'm watching issues; please open one for any questions and especially BEFORE submitting a Pull Request.
+`shovel` works well, but I don't use it anymore. I'm watching issues; please open one for any questions and especially BEFORE submitting a Pull Request.
 
 ## Use
 
@@ -103,6 +103,4 @@ Install shovel + OpenObserve as systemd services, on a local dev VM or productio
 - Go doc: https://pkg.go.dev/github.com/miekg/dns
 - `miekg/dns` exmple: https://github.com/miekg/exdns/blob/master/q/q.go
 - Look up IP subnets for a country: http://www.nirsoft.net/countryip/ or https://ipinfo.io/countries
-
-
 
