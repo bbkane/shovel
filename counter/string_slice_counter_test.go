@@ -7,6 +7,7 @@ import (
 )
 
 func TestStringSliceCounter(t *testing.T) {
+	t.Parallel()
 	c := NewStringSliceCounter()
 
 	c.Add([]string{"a", "b"})

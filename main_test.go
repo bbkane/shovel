@@ -12,6 +12,7 @@ import (
 )
 
 func TestBuildApp(t *testing.T) {
+	t.Parallel()
 	app := buildApp()
 
 	if err := app.Validate(); err != nil {
@@ -20,6 +21,7 @@ func TestBuildApp(t *testing.T) {
 }
 
 func TestRunCLI(t *testing.T) {
+	t.Parallel()
 	updateGolden := os.Getenv("SHOVEL_TEST_UPDATE_GOLDEN") != ""
 	if !updateGolden {
 		t.Log("To update golden files, run: SHOVEL_TEST_UPDATE_GOLDEN=1 go test ./... ")

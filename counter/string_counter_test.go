@@ -7,6 +7,7 @@ import (
 )
 
 func TestStringCounter(t *testing.T) {
+	t.Parallel()
 	c := NewStringCounter()
 	c.Add("4")
 	c.Add("1")

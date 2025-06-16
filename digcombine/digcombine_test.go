@@ -8,6 +8,7 @@ import (
 )
 
 func TestParseNameservers(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                    string
 		passedNameservers       []string
@@ -73,6 +74,7 @@ func TestParseNameservers(t *testing.T) {
 }
 
 func TestParseSubnets(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                string
 		passedSubnets       []string

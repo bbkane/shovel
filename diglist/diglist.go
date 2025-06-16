@@ -67,7 +67,7 @@ func Run(cmdCtx wargcore.Context) error {
 		}
 		subnetIP := net.ParseIP(subnet)
 		if subnetIP == nil {
-			return fmt.Errorf("Could not parse subnet IP: %s", subnet)
+			return fmt.Errorf("could not parse subnet IP: %s", subnet)
 		}
 		subnetIPs = append(subnetIPs, subnetIP)
 

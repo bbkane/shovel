@@ -4,35 +4,51 @@ Make a lot of DNS requests and count the results! Useful for testing complex dyn
 
 Pass multiple qnames, nameservers, record types, and client subnets, either via command line flags, a config, or a combo of both. shovel will dig all combinations of those and show you the results.
 
+## Project Status (2025-06-14)
+
+`shoel1` works well, but I don't use it anymore. I'm watching issues; please open one for any questions and especially BEFORE submitting a Pull Request.
+
 ## Use
 
 Also see [examples.md](./examples.md)
 
-### With different client subnets
-
 ![./demo.gif](./demo.gif)
 
-### With different record types
+You can save these flags to a config:
 
-This uses the same config as the above gif. No subnets passed, so that column is excluded from the output.
+```yaml
+# tmp.yaml
+# see config paths with `shovel dig combine -h`
+dig:
+  combine:
+    count: 10
+    qnames:
+      - example.com
+      - www.example.com
+    nameservers:
+      - 1.1.1.1:53
+    rtypes:
+      - A
+```
+
+Run with:
 
 ```bash
-$ shovel dig --qname linkedin.com --rtype A --rtype AAAA
-╭──────────────┬───────┬──────────────────┬─────────────────┬───────╮
-│ QNAME         │ RTYPE │ NAMESERVER       │ ANS/ERR         │ COUNT │
-├──────────────┼───────┼──────────────────┼─────────────────┼───────┤
-│ linkedin.com │ A     │ # ns1            │ 13.107.42.14    │    10 │
-│              │       │ 198.51.45.9:53   │                 │       │
-│              │       ├──────────────────┼─────────────────┼───────┤
-│              │       │ # dyn            │ 13.107.42.14    │    10 │
-│              │       │ 108.59.161.43:53 │                 │       │
-│              ├───────┼──────────────────┼─────────────────┼───────┤
-│              │ AAAA  │ # ns1            │ 2620:1ec:21::14 │    10 │
-│              │       │ 198.51.45.9:53   │                 │       │
-│              │       ├──────────────────┼─────────────────┼───────┤
-│              │       │ # dyn            │ 2620:1ec:21::14 │    10 │
-│              │       │ 108.59.161.43:53 │                 │       │
-╰──────────────┴───────┴──────────────────┴─────────────────┴───────╯
+shovel dig combine --config ./tmp.yaml
+```
+
+### Proxy DNS Traffic through a separate server with [`sshuttle`](https://sshuttle.readthedocs.io/en/stable/usage.html)
+
+In one tab:
+
+```bash
+sshuttle --dns -r username@host --ns-hosts=8.8.8.8 0/0:53 ::/0:53
+```
+
+In another tab:
+
+```bash
+shovel dig combine -q example.com -r TXT -p tcp4 -n 8.8.8.8:53
 ```
 
 ## Install

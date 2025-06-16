@@ -1,36 +1,29 @@
 # https://github.com/charmbracelet/vhs
 
-Require shovel
-Require bat
+Require example-go-cli
 
 Output demo.gif
 
 Set Shell zsh
 Set PlaybackSpeed 0.5
-Set TypingSpeed 100ms
+Set TypingSpeed 75ms
 
 Set FontSize 22
-Set Height 1000
-Set Width 1750
+Set Height 650
+Set Width 1500
 Set Padding 50
 
-# https://github.com/charmbracelet/vhs/issues/39#issuecomment-1296334921
 Hide
-Type 'export PATH=".:$PATH"'
+Type 'setopt interactive_comments'
 Enter
-Type "clear"
+Type 'clear'
 Enter
-Sleep 5s
 Show
 
-Type "bat ~/.config/shovel.yaml"
-Sleep 200ms
+Type "shovel dig combine --qname example.com --qname www.example.com \"
 Enter
-Sleep 8s
-
-Type "shovel dig combine -q www.linkedin.com -r CNAME -s china -s usa -c 10"
-Sleep 200ms
+Type "--rtype A --nameserver 1.1.1.1:53 --count 10"
 Enter
-Sleep 8s
+Sleep 1s
 
 Sleep 3s

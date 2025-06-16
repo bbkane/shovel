@@ -45,7 +45,7 @@ func ConvertRTypes(rtypeStrs []string) ([]uint16, error) {
 	for _, rtypeStr := range rtypeStrs {
 		rtype, ok := dns.StringToType[rtypeStr]
 		if !ok {
-			return nil, fmt.Errorf("Couldn't parse rtype: %v", rtypeStr)
+			return nil, fmt.Errorf("couldn't parse rtype: %v", rtypeStr)
 		}
 		rtypes = append(rtypes, rtype)
 	}
@@ -109,7 +109,7 @@ func ParseSubnets(passedSubnets []string, subnetMap map[string]net.IP) ([]net.IP
 		// try to parse as IP
 		subIP := net.ParseIP(passed)
 		if subIP == nil {
-			return nil, nil, fmt.Errorf("Could not parse IP: %s", passed)
+			return nil, nil, fmt.Errorf("could not parse IP: %s", passed)
 		}
 		parsed = append(parsed, subIP)
 		subnetToName[passed] = "passed ip"

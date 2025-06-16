@@ -57,7 +57,7 @@ func initHTTPTracerProvider(httpArgs initHTTPTracerProviderParams, tracerArgs tr
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error creating HTTP OTLP exporter: %w", err)
+		return nil, fmt.Errorf("error creating HTTP OTLP exporter: %w", err)
 	}
 
 	res := resource.NewWithAttributes(

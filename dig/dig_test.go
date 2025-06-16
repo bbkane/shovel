@@ -12,6 +12,7 @@ import (
 )
 
 func Test_digOne(t *testing.T) {
+	t.Parallel()
 
 	integrationTest := os.Getenv("SHOVEL_INTEGRATION_TEST") != ""
 	if !integrationTest {
@@ -101,6 +102,7 @@ func Test_digOne(t *testing.T) {
 }
 
 func Test_digVaried(t *testing.T) {
+	t.Parallel()
 
 	tests := []struct {
 		name     string
